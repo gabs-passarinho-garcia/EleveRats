@@ -3,7 +3,7 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = ">= 4.0.0"
+      version = ">= 8.3.0"
     }
   }
 }
@@ -12,9 +12,9 @@ terraform {
 data "oci_core_images" "ubuntu_minimal_arm" {
   compartment_id           = var.compartment_ocid
   operating_system         = "Canonical Ubuntu"
-  operating_system_version = "24.04 Minimal"
+  operating_system_version = "24.04 Minimal aarch64"
   shape                    = "VM.Standard.A1.Flex" #
-  
+
   filter {
     name   = "display_name"
     values = ["^.*-aarch64-.*$"] # Garante que pegamos a versão 64-bit ARM
@@ -103,14 +103,14 @@ resource "oci_core_instance" "nave_mae" {
 
   metadata = {
     # Aqui vai a sua chave Ed25519 gerada localmente
-    ssh_authorized_keys = file("~/.ssh/id_oracle_nave_mae.pub")
-    
+    ssh_authorized_keys = file(pathexpand("../eleve_rats_ssh.pub"))
+
     # Script Cloud-Init (Instala Docker e trava portas internas)
     user_data = base64encode(file("init.sh")) #
   }
 
   instance_options {
-    are_legacy_imds_endpoints_allowed = false # Segurança IMDSv2
+    are_legacy_imds_endpoints_disabled = true # Segurança IMDSv2
   }
 
   agent_config {
@@ -121,6 +121,3 @@ resource "oci_core_instance" "nave_mae" {
   }
 }
 
-output "public_ip" {
-  value = oci_core_instance.nave_mae.public_ip
-}

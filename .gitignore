@@ -52,3 +52,15 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+*.tfvars
+*.env
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tfplan.backup
+*.tfoutput
+*.private.pem
+eleve_rats_ssh
+terraform/.terraform
+**/tfplan
