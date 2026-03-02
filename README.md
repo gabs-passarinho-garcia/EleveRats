@@ -11,31 +11,31 @@ O sistema foi desenhado para ser resiliente, de baixo custo e com zero "cold sta
 ```mermaid
 flowchart TD
     %% Entradas de Dados e Autenticação Externas
-    WA[📱 WhatsApp do Participante] -->|1. Webhook (Foto/Texto)| META(🌐 Meta API)
-    STRAVA(🚴 Strava API) -->|2. ETL Agendado (Rotas/Tempos)| N8N
-    GOOGLE(🔑 Google SSO) -.->|3. OAuth 2.0| API
-    META -->|POST Request| CF(☁️ Cloudflare Tunnels / Zero Trust)
+    WA["📱 WhatsApp do Participante"] -->|"1. Webhook (Foto/Texto)"| META("🌐 Meta API")
+    STRAVA["🚴 Strava API"] -->|"2. ETL Agendado (Rotas/Tempos)"| N8N
+    GOOGLE["🔑 Google SSO"] -.->|"3. OAuth 2.0"| API
+    META -->|"POST Request"| CF("☁️ Cloudflare Tunnels / Zero Trust")
 
     subgraph "Nave Mãe (Oracle Cloud - ARM)"
         direction TB
-        CF_TUNNEL(🛡️ cloudflared)
-        N8N(🤖 n8n - Gateway, ETL & Cron)
-        API(⚙️ Minimal API .NET)
-        STORAGE[(📦 MinIO / Storage)]
-        DB[(🐘 PostgreSQL)]
+        CF_TUNNEL("🛡️ cloudflared")
+        N8N("🤖 n8n - Gateway, ETL & Cron")
+        API("⚙️ Minimal API .NET")
+        STORAGE[("📦 MinIO / Storage")]
+        DB[("🐘 PostgreSQL")]
     end
 
     %% Fluxo Interno
-    CF == 4. Túnel Seguro ==> CF_TUNNEL
-    CF_TUNNEL -->|5. Roteia tráfego interno| N8N
-    CF_TUNNEL -->|Acesso Autenticado| API
+    CF == "4. Túnel Seguro" ==> CF_TUNNEL
+    CF_TUNNEL -->|"5. Roteia tráfego interno"| N8N
+    CF_TUNNEL -->|"Acesso Autenticado"| API
     
-    N8N -->|6. Filtra/Transforma Dados (Zap/Strava)| API
-    API -->|7. Upload do Stream da Foto| STORAGE
-    API -->|8. Salva Dados + URL| DB
+    N8N -->|"6. Filtra/Transforma Dados (Zap/Strava)"| API
+    API -->|"7. Upload do Stream da Foto"| STORAGE
+    API -->|"8. Salva Dados + URL"| DB
     
     %% Rotina de Backup
-    N8N -.->|9. Cron Diário: pg_dump via docker exec| STORAGE
+    N8N -.->|"9. Cron Diário: pg_dump via docker exec"| STORAGE
 ```
 
 ### 🛡️ Segurança e Autenticação
