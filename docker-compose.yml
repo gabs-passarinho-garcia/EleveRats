@@ -1,0 +1,81 @@
+# Docker Compose for EleveRats 2026
+# Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, and .NET Minimal API
+services:
+  # Cloudflare Tunnel - The gatekeeper for Zero Trust security
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    command: tunnel run
+    networks:
+      - eleverats-net
+
+  # PostgreSQL - The relational database for points, users, and check-ins
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: eleverats_db
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - eleverats-net
+
+  # MinIO - Object storage for heavy media (workout proofs)
+  minio:
+    image: minio/minio:latest
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./data/minio:/data
+    networks:
+      - eleverats-net
+
+  # n8n - The webhook receiver and initial validation gateway
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=eleverats_db
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - N8N_HOST=n8n.seudominio.uk
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+    volumes:
+      - ./data/n8n:/home/node/.n8n
+    depends_on:
+      - db
+    networks:
+      - eleverats-net
+
+  # .NET Minimal API - The brain enforcing the business rules
+  api:
+    build: 
+      context: .
+      dockerfile: src/EleveRats.Api/Dockerfile
+    restart: always
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Database=eleverats_db;Username=${DB_USER};Password=${DB_PASSWORD}
+      - Minio__Endpoint=minio:9000
+      - Minio__AccessKey=${MINIO_USER}
+      - Minio__SecretKey=${MINIO_PASSWORD}
+      - ASPNETCORE_URLS=http://+:3000
+    depends_on:
+      - db
+      - minio
+    networks:
+      - eleverats-net
+
+networks:
+  eleverats-net:
+    driver: bridge
