@@ -6,6 +6,21 @@ terraform {
       version = ">= 8.3.0"
     }
   }
+  backend "s3" {
+    bucket   = "eleverats-tf-state"
+    key      = "prod/terraform.tfstate"
+    region   = "us-ashburn-1"
+    endpoint = "https://idyw9ukvm7n9.compat.objectstorage.us-ashburn-1.oraclecloud.com"
+
+    # A MÁGICA DO ISOLAMENTO ACONTECE AQUI 👇
+    profile = "oracle_eleverats"
+
+    # Flags obrigatórias para APIs S3-compatíveis
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true
+    use_path_style              = true
+  }
 }
 
 # 1. Busca automática da imagem Ubuntu 24.04 Minimal ARM
@@ -119,5 +134,24 @@ resource "oci_core_instance" "nave_mae" {
       desired_state = "ENABLED" #
     }
   }
+}
+
+# 1. Pega o seu "Namespace" único da Oracle (obrigatório pro Object Storage)
+data "oci_objectstorage_namespace" "user_namespace" {
+  compartment_id = var.compartment_ocid
+}
+
+# 2. Cria o Bucket S3-Compatible Always Free
+resource "oci_objectstorage_bucket" "tf_state" {
+  compartment_id = var.compartment_ocid
+  namespace      = data.oci_objectstorage_namespace.user_namespace.namespace
+  name           = "eleverats-tf-state"
+
+  # Segurança máxima, ninguém de fora lê o seu estado
+  access_type = "NoPublicAccess"
+
+  # Atitude de Sênior: Habilitar versionamento. 
+  # Se der merda no estado, você consegue voltar no tempo!
+  versioning = "Enabled"
 }
 

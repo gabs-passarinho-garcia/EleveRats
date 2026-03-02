@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "Iniciando o cerco à Oracle..."
+tofu init
 while true; do
   tofu apply -auto-approve
   if [ $? -eq 0 ]; then
