@@ -75,6 +75,7 @@ MINIO_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_passw
 REDIS_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${redis_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 GRAFANA_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${grafana_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 N8N_ENCRYPTION_KEY=$(/root/bin/oci vault secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+CF_TUNNEL_TOKEN=$(/root/bin/oci vault secret-bundle get --secret-id ${cf_tunnel_token_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 # Prepara o diretório e o arquivo .env
 APP_DIR="/mnt/dados/eleverats"
@@ -89,6 +90,7 @@ MINIO_PASSWORD=$MINIO_PASSWORD
 REDIS_PASSWORD=$REDIS_PASSWORD
 GRAFANA_PASSWORD=$GRAFANA_PASSWORD
 N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
+CF_TUNNEL_TOKEN=$CF_TUNNEL_TOKEN
 EOF
 
 chown -R ubuntu:ubuntu $APP_DIR

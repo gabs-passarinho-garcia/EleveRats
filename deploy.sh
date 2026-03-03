@@ -14,7 +14,22 @@ if [ -f .env ]; then
 fi
 
 # ==========================================
-# 2. DEFINIÇÃO DE VARIÁVEIS ALVO
+# 2. PROVISIONAMENTO DA NUVEM (TERRAFORM)
+# ==========================================
+echo "🌩️ Evocando a Infraestrutura da Oracle Cloud (Terraform)..."
+cd terraform
+
+# Garante que os plugins tão baixados
+terraform init -upgrade
+
+# Applica as configurações (Cria VM, Cofres, Segredos) sem pedir confirmação
+terraform apply -auto-approve
+
+# Volta para a raiz
+cd ..
+
+# ==========================================
+# 3. DEFINIÇÃO DE VARIÁVEIS ALVO
 # ==========================================
 
 # Descobre o IP do servidor (via variável de ambiente ou Terraform)
@@ -48,7 +63,7 @@ echo "🎯 Alvo: $SSH_USER@$SERVER_IP:$DEST_DIR"
 echo "🌿 Branch Git: $BRANCH"
 
 # ==========================================
-# 3. ATUALIZAÇÃO DO CÓDIGO E CONTAINERS
+# 4. ATUALIZAÇÃO DO CÓDIGO E CONTAINERS
 # ==========================================
 echo "📦 Baixando código da branch '$BRANCH' diretamente do GitHub para a Nave-Mãe..."
 

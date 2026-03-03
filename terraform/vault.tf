@@ -161,6 +161,20 @@ resource "oci_vault_secret" "n8n_encryption_key_secret" {
   }
 }
 
+resource "oci_vault_secret" "cf_tunnel_token_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "cf-tunnel-token"
+  description    = "Token do Cloudflare Tunnel"
+
+  secret_content {
+    content      = base64encode(var.cf_tunnel_token)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
 # ==========================================
 # IAM: PERMISSÕES PARA A NAVE-MÃE LER O COFRE
 # ==========================================

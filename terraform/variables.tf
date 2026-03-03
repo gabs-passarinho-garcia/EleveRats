@@ -12,3 +12,8 @@ variable "tenancy_ocid" {
   description = "OCID da sua tenancy na Oracle Cloud"
   type        = string
 }
+
+variable "cf_tunnel_token" {
+  description = "Token de autenticação do Cloudflare Tunnel"
+  type        = string
+}

@@ -130,6 +130,7 @@ resource "oci_core_instance" "nave_mae" {
       redis_password_secret_id     = oci_vault_secret.redis_password_secret.id
       grafana_password_secret_id   = oci_vault_secret.grafana_password_secret.id
       n8n_encryption_key_secret_id = oci_vault_secret.n8n_encryption_key_secret.id
+      cf_tunnel_token_secret_id    = oci_vault_secret.cf_tunnel_token_secret.id
     }))
   }
 

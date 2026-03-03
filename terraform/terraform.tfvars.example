@@ -6,3 +6,8 @@ compartment_ocid    = "ocid1.compartment.oc1..cole_seu_ocid_gigante_aqui"
 
 # Domínio de Disponibilidade da sua conta (geralmente o AD-1 tem as instâncias ARM)
 availability_domain = "lqtP:US-ASHBURN-AD-1"
+
+tennancy_ocid = "ocid1.tenancy.oc1..cole_seu_ocid_gigante_aqui"
+
+# Token de autenticação do Cloudflare Tunnel
+cf_tunnel_token = "cole_seu_token_aqui"
