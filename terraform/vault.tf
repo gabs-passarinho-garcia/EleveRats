@@ -27,6 +27,20 @@ resource "random_password" "minio_password" {
   special = false
 }
 
+resource "random_password" "redis_password" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "grafana_password" {
+  length  = 20
+  special = false
+}
+
+resource "random_id" "n8n_encryption_key" {
+  byte_length = 32
+}
+
 # 2. Cria o Vault (Cofre) Always Free
 resource "oci_kms_vault" "eleverats_vault" {
   compartment_id = var.compartment_ocid
@@ -100,6 +114,48 @@ resource "oci_vault_secret" "minio_password_secret" {
 
   secret_content {
     content      = base64encode(random_password.minio_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "redis_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "redis-password"
+  description    = "Senha do Redis Cache in-memory"
+
+  secret_content {
+    content      = base64encode(random_password.redis_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "grafana_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "grafana-password"
+  description    = "Senha de Administrador do Painel Grafana"
+
+  secret_content {
+    content      = base64encode(random_password.grafana_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "n8n_encryption_key_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "n8n-encryption-key"
+  description    = "Chave de Encriptacao do N8N"
+
+  secret_content {
+    content      = base64encode(random_id.n8n_encryption_key.hex)
     content_type = "BASE64"
     stage        = "CURRENT"
   }

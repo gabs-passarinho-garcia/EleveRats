@@ -72,6 +72,9 @@ DB_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${db_password_se
 DB_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${db_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 MINIO_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 MINIO_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+REDIS_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${redis_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+GRAFANA_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${grafana_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+N8N_ENCRYPTION_KEY=$(/root/bin/oci vault secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 # Prepara o diretório e o arquivo .env
 APP_DIR="/mnt/dados/eleverats"
@@ -83,6 +86,9 @@ DB_USER=$DB_USER
 DB_PASSWORD=$DB_PASSWORD
 MINIO_USER=$MINIO_USER
 MINIO_PASSWORD=$MINIO_PASSWORD
+REDIS_PASSWORD=$REDIS_PASSWORD
+GRAFANA_PASSWORD=$GRAFANA_PASSWORD
+N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
 EOF
 
 chown -R ubuntu:ubuntu $APP_DIR

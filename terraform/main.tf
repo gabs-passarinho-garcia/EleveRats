@@ -123,10 +123,13 @@ resource "oci_core_instance" "nave_mae" {
     # Script Cloud-Init (Instala Docker e trava portas internas)
     # Renderizado usando templatefile para passar a referência do Secret na OCI.
     user_data = base64encode(templatefile("init.sh", {
-      db_password_secret_id    = oci_vault_secret.db_password_secret.id
-      db_user_secret_id        = oci_vault_secret.db_user_secret.id
-      minio_user_secret_id     = oci_vault_secret.minio_user_secret.id
-      minio_password_secret_id = oci_vault_secret.minio_password_secret.id
+      db_password_secret_id        = oci_vault_secret.db_password_secret.id
+      db_user_secret_id            = oci_vault_secret.db_user_secret.id
+      minio_user_secret_id         = oci_vault_secret.minio_user_secret.id
+      minio_password_secret_id     = oci_vault_secret.minio_password_secret.id
+      redis_password_secret_id     = oci_vault_secret.redis_password_secret.id
+      grafana_password_secret_id   = oci_vault_secret.grafana_password_secret.id
+      n8n_encryption_key_secret_id = oci_vault_secret.n8n_encryption_key_secret.id
     }))
   }
 

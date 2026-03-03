@@ -42,42 +42,45 @@ else
 fi
 
 DEST_DIR="/mnt/dados/eleverats"
+BRANCH=${BRANCH:-main}
 
 echo "🎯 Alvo: $SSH_USER@$SERVER_IP:$DEST_DIR"
+echo "🌿 Branch Git: $BRANCH"
 
 # ==========================================
-# 3. SINCRONIZAÇÃO (RSYNC)
+# 3. ATUALIZAÇÃO DO CÓDIGO E CONTAINERS
 # ==========================================
-echo "📦 Transferindo arquivos para a Nave-Mãe via rsync..."
+echo "📦 Baixando código da branch '$BRANCH' diretamente do GitHub para a Nave-Mãe..."
 
-# Vamos garantir que a pasta destino exista e tenha permissão
-ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo mkdir -p $DEST_DIR && sudo chown -R $SSH_USER:$SSH_USER $DEST_DIR"
-
-# Rsync: Copia tudo, ignorando lixo
-rsync -avz --delete \
-  -e "ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no" \
-  --exclude '.git' \
-  --exclude 'node_modules' \
-  --exclude 'bin' \
-  --exclude 'obj' \
-  --exclude '.terraform' \
-  --exclude '*.tfstate*' \
-  --exclude 'data' \
-  --exclude 'test' \
-  ./ $SSH_USER@$SERVER_IP:$DEST_DIR/
-
-echo "✅ Arquivos sincronizados."
-
-# ==========================================
-# 4. SUBINDO OS CONTAINERS COM MAGIA
-# ==========================================
-echo "🐳 Reiniciando as engrenagens Docker na Nave-Mãe..."
-
-ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << 'EOF'
-  cd /mnt/dados/eleverats
+ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << EOF
+  set -e
   
-  # Garante permissões corretas
-  sudo chown -R ubuntu:ubuntu /mnt/dados/eleverats
+  # Garante pacote git instalado
+  sudo apt-get update -yqq && sudo apt-get install -yqq git
+
+  # Entra na pasta do projeto (A base já deve ter sido criada pelo Cloud-Init com o .env dentro)
+  cd $DEST_DIR
+  
+  # Garante permissões pro ubuntu poder recriar o repo
+  sudo chown -R $SSH_USER:$SSH_USER $DEST_DIR
+
+  # Configura repositório Git se não existir
+  if [ ! -d ".git" ]; then
+    echo "Inicializando repositório Git do zero..."
+    git init
+    git remote add origin https://github.com/gabs-passarinho-garcia/EleveRats.git
+  fi
+
+  echo "🔄 Atualizando referências do GitHub..."
+  git fetch origin
+
+  # Força o branch atual (Cria se não existir, reseta apontando para o origin)
+  git checkout $BRANCH || git checkout -b $BRANCH origin/$BRANCH
+  echo "🧹 Resetando e aplicando código fresco..."
+  # Reseta qualquer mudança de arquivos, ignorando os arquivos do gitignore (ex: .env e volumes do docker)
+  git reset --hard origin/$BRANCH
+
+  echo "🐳 Reiniciando as engrenagens Docker na Nave-Mãe..."
 
   # Executa o compose usando os arquivos atualizados (com build forçado da nova Minimal API)
   echo "Invocando docker compose down..."
