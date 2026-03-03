@@ -13,6 +13,23 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.MapGet("/", async (IWebHostEnvironment env) => 
+{
+    var dotnetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+    var filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
+    
+    if (!System.IO.File.Exists(filePath)) 
+    {
+        return Results.NotFound("index.html not found");
+    }
+    
+    var html = await System.IO.File.ReadAllTextAsync(filePath);
+    html = html.Replace("{{dotnetVersion}}", dotnetVersion);
+    
+    return Results.Content(html, "text/html");
+});
 
 var summaries = new[]
 {
