@@ -136,6 +136,22 @@ resource "oci_core_instance" "nave_mae" {
   }
 }
 
+resource "oci_core_volume" "dados_nave_mae" {
+  # Ensure the volume is created in the same Availability Domain as the instance
+  availability_domain = var.availability_domain
+  compartment_id      = var.compartment_ocid
+  display_name        = "vol-dados-nave-mae"
+  size_in_gbs         = 130
+}
+
+resource "oci_core_volume_attachment" "dados_nave_mae_attachment" {
+  # Paravirtualized attachment simplifies OS-level volume discovery
+  attachment_type = "paravirtualized"
+  instance_id     = oci_core_instance.nave_mae.id
+  volume_id       = oci_core_volume.dados_nave_mae.id
+  display_name    = "att-dados-nave-mae"
+}
+
 # 1. Pega o seu "Namespace" único da Oracle (obrigatório pro Object Storage)
 data "oci_objectstorage_namespace" "user_namespace" {
   compartment_id = var.compartment_ocid
