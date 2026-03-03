@@ -13,12 +13,13 @@ services:
 
   # PostgreSQL - The relational database for points, users, and check-ins
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: eleverats_db
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     networks:
@@ -60,9 +61,9 @@ services:
 
   # .NET Minimal API - The brain enforcing the business rules
   api:
-    build: 
+    build:
       context: .
-      dockerfile: src/EleveRats.Api/Dockerfile
+      dockerfile: backend/Dockerfile
     restart: always
     environment:
       - ConnectionStrings__DefaultConnection=Host=db;Database=eleverats_db;Username=${DB_USER};Password=${DB_PASSWORD}

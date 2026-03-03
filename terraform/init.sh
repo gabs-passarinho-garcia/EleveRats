@@ -55,7 +55,37 @@ iptables -A INPUT -p tcp --dport 443 -j DROP
 iptables -A INPUT -p tcp --dport 3000 -j DROP
 
 # Torna as regras persistentes
-echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
-echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
-apt-get install iptables-persistent -y
-netfilter-persistent save
+# ==========================================
+# 4. SETUP DO OCI CLI E CRIAÇÃO DO .ENV DA APLICAÇÃO
+# ==========================================
+echo "Configurando OCI CLI via Instance Principal..."
+apt-get install -y python3-pip
+bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)" -s --accept-all-defaults
+
+# Prepara o ambiente pro OCI CLI funcionar com a identidade da Instância (Dynamic Group)
+export OCI_CLI_AUTH="instance_principal"
+
+# Busca a senha do banco gerada via Terraform que tá guardada no Vault
+echo "Buscando secret do banco de dados no OCI Vault..."
+# $${db_password_secret_id} escapa o template so o Terraform injeta a variavel aqui certinho.
+DB_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+DB_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${db_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+MINIO_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+MINIO_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+
+# Prepara o diretório e o arquivo .env
+APP_DIR="/mnt/dados/eleverats"
+mkdir -p $APP_DIR
+
+# Escreve o .env com as senhas extraídas do Vault
+cat <<EOF > $APP_DIR/.env
+DB_USER=$DB_USER
+DB_PASSWORD=$DB_PASSWORD
+MINIO_USER=$MINIO_USER
+MINIO_PASSWORD=$MINIO_PASSWORD
+EOF
+
+chown -R ubuntu:ubuntu $APP_DIR
+chmod 600 $APP_DIR/.env
+
+echo "Init script concluído com sucesso!"

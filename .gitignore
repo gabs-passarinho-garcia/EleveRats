@@ -64,3 +64,4 @@ nunit-*.xml
 eleve_rats_ssh
 terraform/.terraform
 **/tfplan
+data/**

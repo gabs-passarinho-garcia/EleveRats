@@ -7,3 +7,8 @@ variable "availability_domain" {
   description = "O Domínio de Disponibilidade (AD) da sua região (ex: lqtP:US-ASHBURN-AD-1)"
   type        = string
 }
+
+variable "tenancy_ocid" {
+  description = "OCID da sua tenancy na Oracle Cloud"
+  type        = string
+}

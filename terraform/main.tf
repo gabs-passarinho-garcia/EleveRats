@@ -121,7 +121,13 @@ resource "oci_core_instance" "nave_mae" {
     ssh_authorized_keys = file(pathexpand("../eleve_rats_ssh.pub"))
 
     # Script Cloud-Init (Instala Docker e trava portas internas)
-    user_data = base64encode(file("init.sh")) #
+    # Renderizado usando templatefile para passar a referência do Secret na OCI.
+    user_data = base64encode(templatefile("init.sh", {
+      db_password_secret_id    = oci_vault_secret.db_password_secret.id
+      db_user_secret_id        = oci_vault_secret.db_user_secret.id
+      minio_user_secret_id     = oci_vault_secret.minio_user_secret.id
+      minio_password_secret_id = oci_vault_secret.minio_password_secret.id
+    }))
   }
 
   instance_options {
