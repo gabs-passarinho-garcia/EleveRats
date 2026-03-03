@@ -14,16 +14,16 @@ if [ -f .env ]; then
 fi
 
 # ==========================================
-# 2. PROVISIONAMENTO DA NUVEM (TERRAFORM)
+# 2. PROVISIONAMENTO DA NUVEM (OPENTOFU)
 # ==========================================
-echo "🌩️ Evocando a Infraestrutura da Oracle Cloud (Terraform)..."
+echo "🌩️ Evocando a Infraestrutura da Oracle Cloud (Tofu)..."
 cd terraform
 
 # Garante que os plugins tão baixados
-terraform init -upgrade
+tofu init -upgrade
 
 # Applica as configurações (Cria VM, Cofres, Segredos) sem pedir confirmação
-terraform apply -auto-approve
+tofu apply -auto-approve
 
 # Volta para a raiz
 cd ..
@@ -32,15 +32,15 @@ cd ..
 # 3. DEFINIÇÃO DE VARIÁVEIS ALVO
 # ==========================================
 
-# Descobre o IP do servidor (via variável de ambiente ou Terraform)
+# Descobre o IP do servidor (via variável de ambiente ou Tofu)
 if [ -z "$SERVER_IP" ]; then
-  echo "🔍 SERVER_IP não fornecido. Tentando descobrir via Terraform..."
+  echo "🔍 SERVER_IP não fornecido. Tentando descobrir via Tofu..."
   cd terraform
-  SERVER_IP=$(terraform output -raw public_ip 2>/dev/null || echo "")
+  SERVER_IP=$(tofu output -raw public_ip 2>/dev/null || echo "")
   cd ..
   
   if [ -z "$SERVER_IP" ] || [ "$SERVER_IP" = "No outputs found" ]; then
-    echo "❌ Erro: Não foi possível obter o IP do servidor. Defina SERVER_IP no .env ou rode o terraform apply."
+    echo "❌ Erro: Não foi possível obter o IP do servidor. Defina SERVER_IP no .env ou rode o tofu apply."
     exit 1
   fi
 fi
