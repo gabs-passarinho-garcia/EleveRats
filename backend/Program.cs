@@ -1,3 +1,5 @@
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,6 +12,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
@@ -27,6 +30,18 @@ app.MapGet("/", async (IWebHostEnvironment env) =>
     
     var html = await System.IO.File.ReadAllTextAsync(filePath);
     html = html.Replace("{{dotnetVersion}}", dotnetVersion);
+    
+    var docsButton = env.IsDevelopment() 
+        ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
+            <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
+                <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>
+                <path d=""M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z""></path>
+            </svg>
+            Documentação
+        </a>"
+        : string.Empty;
+        
+    html = html.Replace("{{docsButton}}", docsButton);
     
     return Results.Content(html, "text/html");
 });

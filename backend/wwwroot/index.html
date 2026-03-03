@@ -123,6 +123,36 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
+
+        .btn-docs {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2.5rem;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-docs:hover {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        .btn-docs svg {
+            margin-right: 0.5rem;
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -140,6 +170,8 @@
             </div>
             <div class="verse-reference">1 Coríntios 9:24-27</div>
         </div>
+
+        {{docsButton}}
 
         <div class="soli-deo-gloria">Soli Deo Gloria</div>
     </div>
