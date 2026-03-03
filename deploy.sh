@@ -14,7 +14,47 @@ if [ -f .env ]; then
 fi
 
 # ==========================================
-# 2. PROVISIONAMENTO DA NUVEM (OPENTOFU)
+# 2. DESCONEXÃO SEGURA (SAFETY FIRST)
+# ==========================================
+# Tenta descobrir o IP antigo (antes do apply) para preparar a máquina para alterações (caso a VM seja destruída/substituída pelo Tofu)
+OLD_IP=$SERVER_IP
+if [ -z "$OLD_IP" ]; then
+  cd terraform
+  OLD_IP=$(tofu output -raw public_ip 2>/dev/null || echo "")
+  cd ..
+fi
+
+# Define o SSH User (Padrão: ubuntu para imagens da Canonical na OCI)
+SSH_USER=${SSH_USER:-ubuntu}
+
+# Define a chave SSH para as conexões
+if [ -z "$SSH_PRIVATE_KEY_PATH" ]; then
+  SSH_KEY_ARG="-i ~/.ssh/id_oracle_nave_mae"
+else
+  SSH_KEY_ARG="-i $SSH_PRIVATE_KEY_PATH"
+fi
+
+if [ -n "$OLD_IP" ] && [ "$OLD_IP" != "No outputs found" ]; then
+  echo "🛑 Preparando Nave-Mãe atual ($OLD_IP) para atualizações destrutivas..."
+  # O '|| true' evita que o script quebre se a VM já estiver inacessível
+  ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$OLD_IP "bash -s" << 'EOF' || true
+    echo "Desligando containeres para evitar corrupção..."
+    cd /mnt/dados/eleverats || true
+    if [ -f "docker-compose.yml" ]; then
+      sudo docker compose down
+    fi
+    echo "Sincronizando I/O do disco..."
+    sync
+    echo "Desmontando volume paravirtualizado /mnt/dados..."
+    cd /
+    sudo umount -f /mnt/dados || echo "Volume não estava montado ou já havia sido solto."
+EOF
+else
+  echo "🔍 Nenhum IP prévio detectado. Assumindo provisionamento do Zero."
+fi
+
+# ==========================================
+# 3. PROVISIONAMENTO DA NUVEM (OPENTOFU)
 # ==========================================
 echo "🌩️ Evocando a Infraestrutura da Oracle Cloud (Tofu)..."
 cd terraform
@@ -29,41 +69,30 @@ tofu apply -auto-approve
 cd ..
 
 # ==========================================
-# 3. DEFINIÇÃO DE VARIÁVEIS ALVO
+# 4. DEFINIÇÃO DE VARIÁVEIS ALVO ATUALIZADAS
 # ==========================================
 
-# Descobre o IP do servidor (via variável de ambiente ou Tofu)
+# Descobre o IP do servidor (via variável de ambiente ou Tofu) após o apply
 if [ -z "$SERVER_IP" ]; then
-  echo "🔍 SERVER_IP não fornecido. Tentando descobrir via Tofu..."
+  echo "🔍 SERVER_IP não fornecido. Buscando novo IP no Tofu..."
   cd terraform
   SERVER_IP=$(tofu output -raw public_ip 2>/dev/null || echo "")
   cd ..
   
   if [ -z "$SERVER_IP" ] || [ "$SERVER_IP" = "No outputs found" ]; then
-    echo "❌ Erro: Não foi possível obter o IP do servidor. Defina SERVER_IP no .env ou rode o tofu apply."
+    echo "❌ Erro: Não foi possível obter o IP do servidor após o apply."
     exit 1
   fi
-fi
-
-# Define o SSH User (Padrão: ubuntu para imagens da Canonical na OCI)
-SSH_USER=${SSH_USER:-ubuntu}
-
-# Define a chave SSH
-if [ -z "$SSH_PRIVATE_KEY_PATH" ]; then
-  # Se não tiver no .env, assume o caminho padrão que criamos no projeto
-  SSH_KEY_ARG="-i ~/.ssh/id_oracle_nave_mae"
-else
-  SSH_KEY_ARG="-i $SSH_PRIVATE_KEY_PATH"
 fi
 
 DEST_DIR="/mnt/dados/eleverats"
 BRANCH=${BRANCH:-main}
 
-echo "🎯 Alvo: $SSH_USER@$SERVER_IP:$DEST_DIR"
+echo "🎯 Novo Alvo Pós-Tofu: $SSH_USER@$SERVER_IP:$DEST_DIR"
 echo "🌿 Branch Git: $BRANCH"
 
 # ==========================================
-# 4. ATUALIZAÇÃO DO CÓDIGO E CONTAINERS
+# 5. ATUALIZAÇÃO DO CÓDIGO E CONTAINERS
 # ==========================================
 echo "📦 Baixando código da branch '$BRANCH' diretamente do GitHub para a Nave-Mãe..."
 
