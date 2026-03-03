@@ -101,6 +101,8 @@ resource "oci_core_instance" "nave_mae" {
   display_name        = "Nave-Mae-Gabs"
   shape               = "VM.Standard.A1.Flex" #
 
+  preserve_boot_volume = true
+
   shape_config {
     ocpus         = 4  # Limite Always Free
     memory_in_gbs = 24 # Limite Always Free
