@@ -7,12 +7,15 @@ apt-get update && apt-get upgrade -y
 # ==========================================
 # 1. CONFIGURAÇÃO DO DISCO EXTRA (130GB)
 # ==========================================
-# Busca o disco pelo link estável da Oracle (evita o erro do /dev/sdb)
-DISCO=$(readlink -f /dev/oracle_vvb/orclvd*)
-PONTO_MONTAGEM="/mnt/dados"
-
 # Dá um tempinho pro OCI plugar o disco paravirtualizado na VM
 sleep 15
+
+# Busca o disco pelo link estável da Oracle. Se não existir (ou o udev do Ubuntu 24 falhar), foca no /dev/sdb
+DISCO=$(readlink -f /dev/oracle_vvb/orclvd* 2>/dev/null || true)
+if [ -z "$DISCO" ] || [ "$DISCO" = "/dev/oracle_vvb/orclvd*" ]; then
+  DISCO="/dev/sdb"
+fi
+PONTO_MONTAGEM="/mnt/dados"
 
 # Verifica se o disco realmente foi anexado
 if [ -n "$DISCO" ] && [ -b "$DISCO" ]; then
@@ -73,14 +76,14 @@ sleep 10
 
 echo "Buscando segredos no Vault..."
 # Injeção via Terraform Template (escapando chaves se necessário)
-DB_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-DB_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${db_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-MINIO_USER=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-MINIO_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${minio_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-REDIS_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${redis_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-GRAFANA_PASSWORD=$(/root/bin/oci vault secret-bundle get --secret-id ${grafana_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-N8N_ENCRYPTION_KEY=$(/root/bin/oci vault secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
-CF_TUNNEL_TOKEN=$(/root/bin/oci vault secret-bundle get --secret-id ${cf_tunnel_token_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+DB_USER=$(/root/bin/oci secrets secret-bundle get --secret-id ${db_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+MINIO_USER=$(/root/bin/oci secrets secret-bundle get --secret-id ${minio_user_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+MINIO_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${minio_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+REDIS_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${redis_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+GRAFANA_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${grafana_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+N8N_ENCRYPTION_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+CF_TUNNEL_TOKEN=$(/root/bin/oci secrets secret-bundle get --secret-id ${cf_tunnel_token_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 APP_DIR="/mnt/dados/eleverats"
 mkdir -p "$APP_DIR"

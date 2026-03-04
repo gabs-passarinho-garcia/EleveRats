@@ -13,7 +13,8 @@ OLD_IP=$(tofu output -raw public_ip 2>/dev/null || echo "")
 cd ..
 
 SSH_USER="ubuntu"
-SSH_KEY_ARG="-i ~/.ssh/id_oracle_nave_mae"
+SSH_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_oracle_nave_mae}"
+SSH_KEY_ARG="-i $SSH_KEY_PATH"
 
 if [ -n "$OLD_IP" ] && [ "$OLD_IP" != "No outputs found" ]; then
   echo "🛑 Desligando motores da Nave-Mãe antiga ($OLD_IP)..."
@@ -38,6 +39,10 @@ echo "📦 Atualizando código na branch '$BRANCH' em $SERVER_IP..."
 
 ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << EOF
   set -e
+  
+  echo "⏳ Aguardando a Nave-Mãe terminar a sequência de inicialização (cloud-init)..."
+  sudo cloud-init status --wait || true
+
   sudo apt-get update -yqq && sudo apt-get install -yqq git
 
   # Garante montagem do volume
