@@ -98,7 +98,7 @@ resource "oci_core_subnet" "subnet" {
 resource "oci_core_instance" "nave_mae" {
   availability_domain = var.availability_domain #
   compartment_id      = var.compartment_ocid
-  display_name        = "Nave-Mae-Gabs"
+  display_name        = "Nave-Mae-Gabs-2"
   shape               = "VM.Standard.A1.Flex" #
 
   preserve_boot_volume = true
