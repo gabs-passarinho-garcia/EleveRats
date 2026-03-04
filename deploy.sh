@@ -41,7 +41,7 @@ if [ -n "$OLD_IP" ] && [ "$OLD_IP" != "No outputs found" ]; then
     echo "Desligando containeres para evitar corrupção..."
     cd /mnt/dados/eleverats || true
     if [ -f "docker-compose.yml" ]; then
-      sudo docker compose down
+      docker compose down
     fi
     echo "Sincronizando I/O do disco..."
     sync
@@ -101,6 +101,12 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
   
   # Garante pacote git instalado
   sudo apt-get update -yqq && sudo apt-get install -yqq git
+
+  # Monta o volume se não estiver montado
+  if ! mountpoint -q /mnt/dados; then
+    echo "Volume /mnt/dados não está montado. Montando..."
+    sudo mount -a || sudo mount /mnt/dados
+  fi
 
   # Entra na pasta do projeto (A base já deve ter sido criada pelo Cloud-Init com o .env dentro)
   cd $DEST_DIR

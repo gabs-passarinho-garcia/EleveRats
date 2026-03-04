@@ -50,6 +50,14 @@ while true; do
     
     # Trigger the notification
     send_notification
+
+    # Executa o script de deploy completo agora que a máquina garantida
+    echo -e "${BLUE}=================================================${NC}"
+    echo -e "${YELLOW}🚀 Chamando o Feitiço de Deploy para configurar a Nave-Mãe...${NC}"
+    echo -e "${BLUE}=================================================${NC}\n"
+    
+    cd ..
+    bash deploy.sh
     break
   fi
   

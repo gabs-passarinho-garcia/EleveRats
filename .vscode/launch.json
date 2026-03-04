@@ -7,7 +7,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      // Main executable path
+      // Main executable path for .NET 10
       "program": "${workspaceFolder}/backend/bin/Debug/net10.0/EleveRats.dll",
       "args": [],
       "cwd": "${workspaceFolder}/backend",
@@ -23,11 +23,12 @@
       "sourceFileMap": {
         "/Views": "${workspaceFolder}/Views"
       },
-      // Pipe transport configuration for using netcoredbg on Linux
+      // Pipe transport configuration for netcoredbg on Linux
       "pipeTransport": {
         "pipeCwd": "${workspaceFolder}/backend",
         "pipeProgram": "bash",
         "pipeArgs": ["-c"],
+        // Absolute path to the netcoredbg executable
         "debuggerPath": "/mnt/dados/Gabriel/Projetos/netcoredbg-linux-amd64/netcoredbg/netcoredbg"
       }
     },
