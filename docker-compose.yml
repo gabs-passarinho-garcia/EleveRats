@@ -25,7 +25,7 @@ services:
       POSTGRES_DB: eleverats_db
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - /mnt/dados/eleverats-state/data/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./backend/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     networks:
       - eleverats-net
@@ -41,7 +41,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
-      - /mnt/dados/eleverats-state/data/minio:/data
+      - minio_data:/data
     networks:
       - eleverats-net
 
@@ -70,7 +70,7 @@ services:
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - /mnt/dados/eleverats-state/data/n8n:/home/node/.n8n
+      - n8n_data:/home/node/.n8n
     depends_on:
       - db
       - redis
@@ -85,7 +85,7 @@ services:
       - /mnt/dados/eleverats-state/.env
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - /mnt/dados/eleverats-state/data/redis:/data
+      - redis_data:/data
     networks:
       - eleverats-net
 
@@ -117,7 +117,7 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - /mnt/dados/eleverats-state/data/prometheus:/prometheus
+      - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     networks:
@@ -132,7 +132,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     volumes:
-      - /mnt/dados/eleverats-state/data/grafana:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
     networks:
       - eleverats-net
 
@@ -166,3 +166,47 @@ services:
 networks:
   eleverats-net:
     driver: bridge
+
+# A mágica acontece aqui embaixo:
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/postgres
+
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/minio
+
+  n8n_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/n8n
+
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/redis
+
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/prometheus
+
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/grafana
