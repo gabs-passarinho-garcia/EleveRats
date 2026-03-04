@@ -59,7 +59,7 @@ services:
       - DB_POSTGRESDB_DATABASE=n8n_db
       - DB_POSTGRESDB_USER=n8n_user
       - DB_POSTGRESDB_PASSWORD=n8n_password
-      - N8N_HOST=n8n-eleverats.gabspassarinhogarcia.uk
+      - N8N_HOST=n8n.gabspassarinhogarcia.uk
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
