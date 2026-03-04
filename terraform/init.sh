@@ -92,10 +92,17 @@ GRAFANA_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${grafana
 N8N_ENCRYPTION_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 CF_TUNNEL_TOKEN=$(/root/bin/oci secrets secret-bundle get --secret-id ${cf_tunnel_token_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
-APP_DIR="/mnt/dados/eleverats"
-mkdir -p "$APP_DIR"
+STATE_DIR="/mnt/dados/eleverats-state"
+mkdir -p "$STATE_DIR"
+# Criar estrutura de dados persistentes para os containers
+mkdir -p "$STATE_DIR/data/postgres"
+mkdir -p "$STATE_DIR/data/minio"
+mkdir -p "$STATE_DIR/data/n8n"
+mkdir -p "$STATE_DIR/data/redis"
+mkdir -p "$STATE_DIR/data/prometheus"
+mkdir -p "$STATE_DIR/data/grafana"
 
-cat <<EOF > "$APP_DIR/.env"
+cat <<EOF > "$STATE_DIR/.env"
 DB_USER=$DB_USER
 DB_PASSWORD=$DB_PASSWORD
 MINIO_USER=$MINIO_USER
@@ -106,7 +113,7 @@ N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
 CF_TUNNEL_TOKEN=$CF_TUNNEL_TOKEN
 EOF
 
-chown -R ubuntu:ubuntu "$APP_DIR"
-chmod 600 "$APP_DIR/.env"
+chown -R ubuntu:ubuntu "$STATE_DIR"
+chmod 600 "$STATE_DIR/.env"
 
 echo "✅ Nave-Mãe inicializada com sucesso! Soli Deo Gloria!"

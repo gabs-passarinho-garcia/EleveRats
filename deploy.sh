@@ -50,18 +50,17 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
     sudo mount -a || sudo mount /mnt/dados
   fi
 
+  # Limpeza drástica para deploy efêmero (O Banco e Env estão seguros fora da pasta)
+  sudo rm -rf $DEST_DIR
+  
+  # Clona a branch do zero no destino
+  git clone -b $BRANCH https://github.com/gabs-passarinho-garcia/EleveRats.git $DEST_DIR
+  
+  # Injecta o ambiente de volta no código clonado para o docker-compose fazer o parser das strings
+  sudo cp /mnt/dados/eleverats-state/.env $DEST_DIR/.env
+  
   cd $DEST_DIR
   sudo chown -R $SSH_USER:$SSH_USER $DEST_DIR
-
-  if [ ! -d ".git" ]; then
-    git init
-    git remote add origin https://github.com/gabs-passarinho-garcia/EleveRats.git
-  fi
-
-  git fetch origin
-  # -B: Força a branch local a espelhar a origin, não importa o que aconteça
-  git checkout -B $BRANCH origin/$BRANCH
-  git reset --hard origin/$BRANCH
 
   echo "🐳 Reiniciando containers Docker..."
   sudo docker compose down || true

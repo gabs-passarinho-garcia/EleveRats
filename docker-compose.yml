@@ -5,6 +5,8 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
     command: tunnel run
@@ -15,13 +17,15 @@ services:
   db:
     image: postgres:18-alpine
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: eleverats_db
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - /mnt/dados/eleverats-state/data/postgres:/var/lib/postgresql/data
       - ./backend/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     networks:
       - eleverats-net
@@ -30,12 +34,14 @@ services:
   minio:
     image: minio/minio:latest
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
-      - ./data/minio:/data
+      - /mnt/dados/eleverats-state/data/minio:/data
     networks:
       - eleverats-net
 
@@ -43,6 +49,8 @@ services:
   n8n:
     image: n8nio/n8n:latest
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       # Isola o banco de dados do N8N
       - DB_TYPE=postgresdb
@@ -62,7 +70,7 @@ services:
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - ./data/n8n:/home/node/.n8n
+      - /mnt/dados/eleverats-state/data/n8n:/home/node/.n8n
     depends_on:
       - db
       - redis
@@ -73,9 +81,11 @@ services:
   redis:
     image: redis:8-alpine
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - ./data/redis:/data
+      - /mnt/dados/eleverats-state/data/redis:/data
     networks:
       - eleverats-net
 
@@ -85,6 +95,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       - ConnectionStrings__DefaultConnection=Host=db;Database=eleverats_db;Username=${DB_USER};Password=${DB_PASSWORD}
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD}
@@ -105,7 +117,7 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./data/prometheus:/prometheus
+      - /mnt/dados/eleverats-state/data/prometheus:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     networks:
@@ -115,10 +127,12 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    env_file:
+      - /mnt/dados/eleverats-state/.env
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     volumes:
-      - ./data/grafana:/var/lib/grafana
+      - /mnt/dados/eleverats-state/data/grafana:/var/lib/grafana
     networks:
       - eleverats-net
 
