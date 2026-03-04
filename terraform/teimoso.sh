@@ -61,11 +61,14 @@ while true; do
     break
   fi
   
-  echo -e "\n${RED}❌ Toco do servidor! Sem vaga no garrafão da Oracle agora.${NC}"
-  echo -e "${YELLOW}⏳ O Tiozão vai secar a careca, tomar uma água e tenta de novo em 60 segundos...${NC}"
+  # Calcula um tempo de espera aleatório entre 60 e 180 segundos (1 a 3 minutos)
+  # Isso evita bater no limite da API (Rate Limit / HTTP 429) da Oracle Cloud
+  COOLDOWN_TIME=$(( (RANDOM % 121) + 60 ))
   
-  # 60-second visual countdown timer
-  for i in {60..1}; do
+  echo -e "${YELLOW}⏳ O Tiozão vai secar a careca, tomar uma água e tenta de novo em ${COOLDOWN_TIME} segundos...${NC}"
+  
+  # Visual countdown timer com o tempo sorteado
+  for (( i=${COOLDOWN_TIME}; i>0; i-- )); do
     echo -ne "\rPróximo arremesso em: $i segundos... \033[0K"
     sleep 1
   done
