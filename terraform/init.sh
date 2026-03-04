@@ -26,7 +26,9 @@ if [ -n "$DISCO" ] && [ -b "$DISCO" ]; then
   fi
 
   mkdir -p "$PONTO_MONTAGEM"
-  mount "$DISCO" "$PONTO_MONTAGEM"
+  if ! mountpoint -q "$PONTO_MONTAGEM"; then
+    mount "$DISCO" "$PONTO_MONTAGEM"
+  fi
 
   # Pega o UUID para o fstab ser à prova de falhas
   UUID=$(blkid -s UUID -o value "$DISCO")
@@ -42,10 +44,13 @@ fi
 # ==========================================
 # 2. INSTALAÇÃO DO DOCKER
 # ==========================================
-apt-get install -y curl git apt-transport-https ca-certificates gnupg-agent software-properties-common
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-usermod -aG docker ubuntu
+# Só instala se não houver o executável do docker disponível
+if ! command -v docker &> /dev/null; then
+  apt-get install -y curl git apt-transport-https ca-certificates gnupg-agent software-properties-common
+  curl -fsSL https://get.docker.com -o get-docker.sh
+  sh get-docker.sh
+  usermod -aG docker ubuntu
+fi
 
 # ==========================================
 # 3. FIREWALL INTERNO (IPTABLES)
@@ -64,8 +69,10 @@ netfilter-persistent save
 # 4. SETUP DO OCI CLI E SECRETS (VAULT)
 # ==========================================
 apt-get install -y python3-pip
-# Instalação silenciosa do OCI CLI
-bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)" -s --accept-all-defaults
+# Instalação silenciosa do OCI CLI só se não estiver instalado
+if ! command -v /root/bin/oci &> /dev/null; then
+  bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)" -s --accept-all-defaults
+fi
 
 # Garante que o OCI CLI está no PATH para o root
 export PATH=$PATH:/root/bin
