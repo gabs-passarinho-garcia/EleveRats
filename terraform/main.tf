@@ -146,6 +146,11 @@ resource "oci_core_instance" "nave_mae" {
       desired_state = "ENABLED" #
     }
   }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [metadata]
+  }
 }
 
 resource "oci_core_volume" "dados_nave_mae" {
@@ -154,6 +159,10 @@ resource "oci_core_volume" "dados_nave_mae" {
   compartment_id      = var.compartment_ocid
   display_name        = "vol-dados-nave-mae"
   size_in_gbs         = 130
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "oci_core_volume_attachment" "dados_nave_mae_attachment" {

@@ -46,6 +46,10 @@ resource "oci_kms_vault" "eleverats_vault" {
   compartment_id = var.compartment_ocid
   display_name   = "vault-eleverats"
   vault_type     = "DEFAULT" # DEFAULT é o tipo suportado no Always Free
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # 3. Cria a Chave Master no Vault (Master Encryption Key Protegida por HSM)
@@ -75,6 +79,10 @@ resource "oci_vault_secret" "db_password_secret" {
     content_type = "BASE64"
     stage        = "CURRENT"
   }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
 }
 
 resource "oci_vault_secret" "db_user_secret" {
@@ -88,6 +96,10 @@ resource "oci_vault_secret" "db_user_secret" {
     content      = base64encode(random_string.db_user.result)
     content_type = "BASE64"
     stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
   }
 }
 
@@ -103,6 +115,10 @@ resource "oci_vault_secret" "minio_user_secret" {
     content_type = "BASE64"
     stage        = "CURRENT"
   }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
 }
 
 resource "oci_vault_secret" "minio_password_secret" {
@@ -116,6 +132,10 @@ resource "oci_vault_secret" "minio_password_secret" {
     content      = base64encode(random_password.minio_password.result)
     content_type = "BASE64"
     stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
   }
 }
 
@@ -131,6 +151,10 @@ resource "oci_vault_secret" "redis_password_secret" {
     content_type = "BASE64"
     stage        = "CURRENT"
   }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
 }
 
 resource "oci_vault_secret" "grafana_password_secret" {
@@ -145,6 +169,10 @@ resource "oci_vault_secret" "grafana_password_secret" {
     content_type = "BASE64"
     stage        = "CURRENT"
   }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
 }
 
 resource "oci_vault_secret" "n8n_encryption_key_secret" {
@@ -158,6 +186,10 @@ resource "oci_vault_secret" "n8n_encryption_key_secret" {
     content      = base64encode(random_id.n8n_encryption_key.hex)
     content_type = "BASE64"
     stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
   }
 }
 
