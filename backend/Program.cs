@@ -1,3 +1,4 @@
+using Prometheus;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Captura métricas HTTP (quantidade de requests, duração, status codes)
+app.UseHttpMetrics();
 
 app.MapGet("/", async (IWebHostEnvironment env) => 
 {
@@ -64,6 +68,9 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+// Expõe o endpoint /metrics para o Prometheus coletar os dados
+app.MapMetrics();
 
 app.Run();
 
