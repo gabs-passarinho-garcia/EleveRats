@@ -218,8 +218,8 @@ resource "oci_identity_dynamic_group" "nave_mae_dg" {
   name           = "dg-nave-mae"
   description    = "Grupo dinamico contendo a Nave Mae"
 
-  # Regra: Qualquer instância que tiver o exato ID da sua Nave-Mãe fará parte do grupo
-  matching_rule = "Any {instance.id = '${oci_core_instance.nave_mae.id}'}"
+  # Regra: Qualquer instância no compartimento fará parte do grupo (Best Practice OCI)
+  matching_rule = "ALL {instance.compartment.id = '${var.compartment_ocid}'}"
 }
 
 # 2. Política de Acesso (A chave da porta)
@@ -230,7 +230,10 @@ resource "oci_identity_policy" "nave_mae_vault_policy" {
   description    = "Permite que a Nave Mae leia os segredos no compartimento"
 
   statements = [
-    # Permite ler apenas o conteúdo do segredo (secret-bundles)
-    "Allow dynamic-group dg-nave-mae to read secret-bundles in compartment id ${var.compartment_ocid}"
+    # Permite ler a familia de segredos e o conteudo do bundle
+    "Allow dynamic-group dg-nave-mae to read secret-family in compartment id ${var.compartment_ocid}",
+    "Allow dynamic-group dg-nave-mae to read secret-bundles in compartment id ${var.compartment_ocid}",
+    # Permite que a Vault API use a chave KMS por baixo dos panos para descriptografar o payload pro cliente
+    "Allow dynamic-group dg-nave-mae to use keys in compartment id ${var.compartment_ocid}"
   ]
 }
