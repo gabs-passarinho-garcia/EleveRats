@@ -63,20 +63,14 @@ resource "oci_core_route_table" "rt" {
   }
 }
 
-# 5. Security List Minimalista (Apenas SSH porta 22)
-resource "oci_core_security_list" "sl_ssh_only" {
+# 5. Security List: Zero inbound público — acesso via Tailscale only
+resource "oci_core_security_list" "sl_tailscale_only" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn_nave_mae.id
-  display_name   = "sl-cloudflare-tunnel-safe"
+  display_name   = "sl-tailscale-only"
 
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
+  # No ingress rules — all inbound traffic is blocked at the OCI level.
+  # Access to the instance is exclusively through the Tailscale mesh network.
 
   egress_security_rules {
     protocol    = "all"
@@ -91,7 +85,7 @@ resource "oci_core_subnet" "subnet" {
   cidr_block        = "10.0.1.0/24"
   display_name      = "subnet-nave-mae"
   route_table_id    = oci_core_route_table.rt.id
-  security_list_ids = [oci_core_security_list.sl_ssh_only.id]
+  security_list_ids = [oci_core_security_list.sl_tailscale_only.id]
 }
 
 # 7. A Instância Ampere (A "Nave-Mãe")
@@ -115,7 +109,7 @@ resource "oci_core_instance" "nave_mae" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.subnet.id
-    assign_public_ip = true
+    assign_public_ip = false # Public access disabled; Tailscale handles all inbound
   }
 
   metadata = {
@@ -177,6 +171,39 @@ resource "oci_core_volume_attachment" "dados_nave_mae_attachment" {
   instance_id     = oci_core_instance.nave_mae.id
   volume_id       = oci_core_volume.dados_nave_mae.id
   display_name    = "att-dados-nave-mae"
+}
+
+# 8. IP Público Reservado (Persistente) — nunca muda, nunca morre
+# Attached to the instance's primary VNIC after provisioning.
+resource "oci_core_public_ip" "nave_mae_reserved_ip" {
+  compartment_id = var.compartment_ocid
+  lifetime       = "RESERVED"
+  display_name   = "reserved-ip-nave-mae"
+
+  # Binds the reserved IP to the instance's primary private IP.
+  # The OCID of the private IP is resolved via oci_core_private_ips.
+  private_ip_id = data.oci_core_private_ips.nave_mae_private_ips.private_ips[0].id
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Data source to resolve the primary VNIC of the instance
+data "oci_core_vnic_attachments" "nave_mae_vnic_attachments" {
+  compartment_id      = var.compartment_ocid
+  availability_domain = var.availability_domain
+  instance_id         = oci_core_instance.nave_mae.id
+}
+
+data "oci_core_vnic" "nave_mae_vnic" {
+  vnic_id = data.oci_core_vnic_attachments.nave_mae_vnic_attachments.vnic_attachments[0].vnic_id
+}
+
+# Resolves the OCID of the primary private IP attached to the VNIC.
+# Required to bind a Reserved Public IP to the instance.
+data "oci_core_private_ips" "nave_mae_private_ips" {
+  vnic_id = data.oci_core_vnic_attachments.nave_mae_vnic_attachments.vnic_attachments[0].vnic_id
 }
 
 # 1. Pega o seu "Namespace" único da Oracle (obrigatório pro Object Storage)
