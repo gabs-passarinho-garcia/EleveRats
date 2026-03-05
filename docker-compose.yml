@@ -179,6 +179,14 @@ services:
       - FOUNDRY_PASSWORD=${FOUNDRY_PASSWORD}
       - FOUNDRY_USERNAME=${FOUNDRY_USERNAME}
       - FOUNDRY_ADMIN_KEY=${FOUNDRY_ADMIN_KEY}
+      - FOUNDRY_AWS_CONFIG=s3.json
+      - FOUNDRY_COMPRESS_SOCKET=true
+      - FOUNDRY_COMPRESS_STATIC=true
+      - FOUNDRY_HOSTNAME=vtt.gabspassarinhogarcia.uk
+      - FOUNDRY_HOT_RELOAD=true
+      - FOUNDRY_LANGUAGE=pt-BR.pt-BR
+      - FOUNDRY_PROXY_PORT=443
+      - FOUNDRY_PROXY_SSL=true
     networks:
       - rpg-net
 
