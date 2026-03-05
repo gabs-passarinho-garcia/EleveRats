@@ -129,4 +129,6 @@ EOF
 chown ubuntu:ubuntu "$STATE_DIR/.env"
 chmod 600 "$STATE_DIR/.env"
 
+sudo tailscale up
+
 echo "✅ Nave-Mãe inicializada com sucesso! Soli Deo Gloria!"
