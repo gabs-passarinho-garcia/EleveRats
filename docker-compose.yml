@@ -12,6 +12,7 @@ services:
     command: tunnel run
     networks:
       - eleverats-net
+      - rpg-net
 
   # PostgreSQL - The relational database for points, users, and check-ins
   db:
