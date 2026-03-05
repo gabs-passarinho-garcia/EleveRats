@@ -17,3 +17,19 @@ variable "cf_tunnel_token" {
   description = "Token de autenticação do Cloudflare Tunnel"
   type        = string
 }
+
+variable "foundry_password" {
+  description = "Senha do FoundryVTT"
+  type        = string
+}
+
+variable "foundry_username" {
+  description = "Usuario do FoundryVTT"
+  type        = string
+}
+
+variable "foundry_admin_key" {
+  description = "Chave de administrador do FoundryVTT"
+  type        = string
+}
+

@@ -91,16 +91,25 @@ REDIS_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${redis_pas
 GRAFANA_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${grafana_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 N8N_ENCRYPTION_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${n8n_encryption_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 CF_TUNNEL_TOKEN=$(/root/bin/oci secrets secret-bundle get --secret-id ${cf_tunnel_token_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+FOUNDRY_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+FOUNDRY_USERNAME=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_username_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+FOUNDRY_ADMIN_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_admin_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 STATE_DIR="/mnt/dados/eleverats-state"
-mkdir -p "$STATE_DIR"
-# Criar estrutura de dados persistentes para os containers
-mkdir -p "$STATE_DIR/data/postgres"
-mkdir -p "$STATE_DIR/data/minio"
-mkdir -p "$STATE_DIR/data/n8n"
-mkdir -p "$STATE_DIR/data/redis"
-mkdir -p "$STATE_DIR/data/prometheus"
-mkdir -p "$STATE_DIR/data/grafana"
+echo "📂 Criando diretórios persistentes em $STATE_DIR e ajustando permissões..."
+
+# Cria a pasta raiz e a subpasta data, garantindo que o ubuntu é o dono inicial
+mkdir -p "$STATE_DIR/data"
+chown ubuntu:ubuntu "$STATE_DIR"
+chown ubuntu:ubuntu "$STATE_DIR/data"
+
+# Ajuste de UIDs específicos para cada container
+mkdir -p "$STATE_DIR/data/postgres" && chown -R 999:999 "$STATE_DIR/data/postgres"
+mkdir -p "$STATE_DIR/data/redis" && chown -R 999:999 "$STATE_DIR/data/redis"
+mkdir -p "$STATE_DIR/data/n8n" && chown -R 1000:1000 "$STATE_DIR/data/n8n"
+mkdir -p "$STATE_DIR/data/grafana" && chown -R 472:472 "$STATE_DIR/data/grafana"
+mkdir -p "$STATE_DIR/data/prometheus" && chown -R 65534:65534 "$STATE_DIR/data/prometheus"
+mkdir -p "$STATE_DIR/data/minio" && chown -R 1000:1000 "$STATE_DIR/data/minio"
 
 cat <<EOF > "$STATE_DIR/.env"
 DB_USER=$DB_USER
@@ -111,9 +120,13 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 GRAFANA_PASSWORD=$GRAFANA_PASSWORD
 N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
 CF_TUNNEL_TOKEN=$CF_TUNNEL_TOKEN
+FOUNDRY_PASSWORD=$FOUNDRY_PASSWORD
+FOUNDRY_USERNAME=$FOUNDRY_USERNAME
+FOUNDRY_ADMIN_KEY=$FOUNDRY_ADMIN_KEY
 EOF
 
-chown -R ubuntu:ubuntu "$STATE_DIR"
+# Ajuste seguro apenas no .env
+chown ubuntu:ubuntu "$STATE_DIR/.env"
 chmod 600 "$STATE_DIR/.env"
 
 echo "✅ Nave-Mãe inicializada com sucesso! Soli Deo Gloria!"

@@ -133,6 +133,9 @@ resource "oci_core_instance" "nave_mae" {
       grafana_password_secret_id   = oci_vault_secret.grafana_password_secret.id
       n8n_encryption_key_secret_id = oci_vault_secret.n8n_encryption_key_secret.id
       cf_tunnel_token_secret_id    = oci_vault_secret.cf_tunnel_token_secret.id
+      foundry_password_secret_id   = oci_vault_secret.foundry_password_secret.id
+      foundry_username_secret_id   = oci_vault_secret.foundry_username_secret.id
+      foundry_admin_key_secret_id  = oci_vault_secret.foundry_admin_key_secret.id
     }))
   }
 
@@ -149,7 +152,10 @@ resource "oci_core_instance" "nave_mae" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = [metadata]
+    # Ignore changes to metadata (user_data, ssh keys) and source_details (image updates).
+    # The instance is long-lived; we don't want Tofu to rebuild it every time Oracle
+    # releases a new Ubuntu image.
+    ignore_changes = [metadata, source_details]
   }
 }
 

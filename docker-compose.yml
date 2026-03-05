@@ -45,6 +45,7 @@ services:
       - minio_data:/data
     networks:
       - eleverats-net
+      - rpg-net
 
   # n8n - The webhook receiver and initial validation gateway
   n8n:
@@ -78,6 +79,7 @@ services:
       - redis
     networks:
       - eleverats-net
+      - rpg-net
 
   # Redis - Cache in-memory para velocidade absurda e controle de filas
   redis:
@@ -165,8 +167,28 @@ services:
     networks:
       - eleverats-net
 
+  # FoundryVTT
+  foundry:
+    container_name: foundry
+    image: felddy/foundryvtt:latest
+    hostname: my_foundry_host
+    volumes:
+      - foundry_data:/data
+    environment:
+      - FOUNDRY_PASSWORD=${FOUNDRY_PASSWORD}
+      - FOUNDRY_USERNAME=${FOUNDRY_USERNAME}
+      - FOUNDRY_ADMIN_KEY=${FOUNDRY_ADMIN_KEY}
+    ports:
+      - target: 30000
+        published: 30000
+        protocol: tcp
+    networks:
+      - rpg-net
+
 networks:
   eleverats-net:
+    driver: bridge
+  rpg-net:
     driver: bridge
 
 # A mágica acontece aqui embaixo:
@@ -212,3 +234,10 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/grafana
+
+  foundry_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/rpg-state/data/foundry

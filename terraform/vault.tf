@@ -207,6 +207,48 @@ resource "oci_vault_secret" "cf_tunnel_token_secret" {
   }
 }
 
+resource "oci_vault_secret" "foundry_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "foundry-password"
+  description    = "Senha do FoundryVTT"
+
+  secret_content {
+    content      = base64encode(var.foundry_password)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "foundry_username_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "foundry-username"
+  description    = "Usuario do FoundryVTT"
+
+  secret_content {
+    content      = base64encode(var.foundry_username)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "foundry_admin_key_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "foundry-admin-key"
+  description    = "Chave de administrador do FoundryVTT"
+
+  secret_content {
+    content      = base64encode(var.foundry_admin_key)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+}
+
 # ==========================================
 # IAM: PERMISSÕES PARA A NAVE-MÃE LER O COFRE
 # ==========================================

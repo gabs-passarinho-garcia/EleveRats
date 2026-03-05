@@ -58,6 +58,21 @@ output "cf_tunnel_token_secret_id" {
   value       = oci_vault_secret.cf_tunnel_token_secret.id
 }
 
+output "foundry_password_secret_id" {
+  description = "OCID do Segredo da Senha do FoundryVTT no Vault"
+  value       = oci_vault_secret.foundry_password_secret.id
+}
+
+output "foundry_username_secret_id" {
+  description = "OCID do Segredo do Usuario do FoundryVTT no Vault"
+  value       = oci_vault_secret.foundry_username_secret.id
+}
+
+output "foundry_admin_key_secret_id" {
+  description = "OCID do Segredo da Chave de Administrador do FoundryVTT no Vault"
+  value       = oci_vault_secret.foundry_admin_key_secret.id
+}
+
 output "comando_recuperar_senha" {
   description = "Execute este comando na sua máquina com OCI CLI configurado para ver a senha do banco gerada (ou acesse a interface da OCI no painel do Vault):"
   value       = "oci vault secret-bundle get --secret-id ${oci_vault_secret.db_password_secret.id} --query 'data.\"secret-bundle-content\".content' --raw-output | base64 --decode"
