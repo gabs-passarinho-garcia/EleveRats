@@ -173,11 +173,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 1G
+          cpus: "2.0" # Aumentado para anti IDLE retornar para 1.0 CPU e 1GB RAM ao subir aplicação real
+          memory: 4G
         reservations:
-          cpus: "0.1"
-          memory: 256M
+          cpus: "0.5" # Aumentado para anti IDLE retornar para 0.1 CPU e 256MB RAM ao subir aplicação real
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
