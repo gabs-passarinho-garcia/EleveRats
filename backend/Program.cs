@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using EleveRats.Services;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddOpenTelemetry()
     {
         tracing.AddAspNetCoreInstrumentation(); // Traces incoming HTTP requests
         tracing.AddHttpClientInstrumentation(); // Traces outgoing HTTP requests (e.g., to n8n)
+        tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
         
         // Export traces to Grafana Tempo via OTLP gRPC endpoint
         tracing.AddOtlpExporter(opt =>
