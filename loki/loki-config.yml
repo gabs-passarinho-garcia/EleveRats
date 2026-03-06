@@ -31,6 +31,8 @@ compactor:
   retention_enabled: true # Liga o lixeiro
   retention_delete_delay: 2h # Tempo de carência antes de deletar fisicamente
   retention_delete_worker_count: 150
+  # Obrigatório no Loki 3.x quando retention_enabled = true
+  delete_request_store: filesystem
 
 limits_config:
   retention_period: 30d # Mantém os logs por exatos 1 mês e apaga o resto

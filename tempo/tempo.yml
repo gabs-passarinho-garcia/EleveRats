@@ -9,22 +9,18 @@ distributor:
         http: # Porta padrão: 4318
         grpc: # Porta padrão: 4317 (onde a API .NET envia os traces)
 
-# O Ingester é obrigatório mesmo em single-binary mode
 ingester:
   max_block_duration: 5m
 
+# Retenção de 7 dias — requer image pinada (2.7.2+), latest quebrou o schema
 compactor:
   compaction:
-    # Retenção de 7 dias (7 * 24 horas = 168h).
-    # O lixeiro passa toda semana para manter a casa limpa e o disco respirando.
     block_retention: 168h
 
 storage:
   trace:
     backend: local
     wal:
-      # WAL (Write-Ahead Log) é obrigatório para o compactor funcionar
       path: /tmp/tempo/wal
     local:
-      # Onde os blocos compactados serão salvos fisicamente
       path: /tmp/tempo/blocks
