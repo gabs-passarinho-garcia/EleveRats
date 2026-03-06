@@ -10,6 +10,14 @@ services:
     environment:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
     command: tunnel run
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
     networks:
       - eleverats-net
       - rpg-net
@@ -25,6 +33,19 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: eleverats_db
       PGDATA: /var/lib/postgresql/data/pgdata
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 4G
+        reservations:
+          cpus: "0.2"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d eleverats_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
@@ -42,6 +63,19 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: "public"
     command: server /data --console-address ":9001"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.2"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     volumes:
       - minio_data:/data
     networks:
@@ -55,7 +89,6 @@ services:
     env_file:
       - /mnt/dados/eleverats-state/.env
     environment:
-      # Isola o banco de dados do N8N
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=db
       - DB_POSTGRESDB_PORT=5432
@@ -66,13 +99,28 @@ services:
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-
-      # Queue e Cache robusto com Redis
       - EXECUTIONS_MODE=queue
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
       - N8N_METRICS=true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2G
+        reservations:
+          cpus: "0.2"
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
@@ -89,6 +137,19 @@ services:
     env_file:
       - /mnt/dados/eleverats-state/.env
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     volumes:
       - redis_data:/data
     networks:
@@ -109,6 +170,19 @@ services:
       - Minio__AccessKey=${MINIO_USER}
       - Minio__SecretKey=${MINIO_PASSWORD}
       - ASPNETCORE_URLS=http://+:3000
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       - db
       - minio
@@ -125,6 +199,14 @@ services:
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.1"
+          memory: 256M
     networks:
       - eleverats-net
 
@@ -136,12 +218,20 @@ services:
       - /mnt/dados/eleverats-state/.env
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
       - eleverats-net
 
-  # Monitor do Host (Vê a CPU/RAM da Oracle)
+  # Monitor do Host
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -153,18 +243,33 @@ services:
       - "--path.procfs=/host/proc"
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($|/)"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 128M
     networks:
       - eleverats-net
 
-  # Monitor dos Containers (Vê o consumo de cada container)
+  # Monitor dos Containers
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.2
     container_name: cadvisor
+    command:
+      - "-disable_metrics=disk,diskIO"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
     networks:
       - eleverats-net
 
@@ -187,6 +292,14 @@ services:
       - FOUNDRY_LANGUAGE=pt-BR.pt-BR
       - FOUNDRY_PROXY_PORT=443
       - FOUNDRY_PROXY_SSL=true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 3G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
     networks:
       - rpg-net
 
@@ -196,7 +309,6 @@ networks:
   rpg-net:
     driver: bridge
 
-# A mágica acontece aqui embaixo:
 volumes:
   postgres_data:
     driver: local
@@ -204,42 +316,36 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/postgres
-
   minio_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/minio
-
   n8n_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/n8n
-
   redis_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/redis
-
   prometheus_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/prometheus
-
   grafana_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/grafana
-
   foundry_data:
     driver: local
     driver_opts:

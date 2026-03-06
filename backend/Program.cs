@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddHealthChecks();
 builder.Services.AddHostedService<AntiIdlenessService>();
 
 var app = builder.Build();
@@ -73,6 +74,9 @@ app.MapGet("/weatherforecast", () =>
 
 // Expõe o endpoint /metrics para o Prometheus coletar os dados
 app.MapMetrics();
+
+// Health Check endpoint para o Docker Compose e orquestradores
+app.MapHealthChecks("/health");
 
 app.Run();
 
