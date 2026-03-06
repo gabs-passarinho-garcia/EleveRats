@@ -1,0 +1,25 @@
+server:
+  # A porta HTTP que o Grafana vai usar para ler os traces
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+        grpc:
+          # A porta onde a sua API .NET vai arremessar os traces
+          endpoint: 0.0.0.0:4317
+
+compactor:
+  compaction:
+    # Retenção de 7 dias (7 * 24 horas = 168h). 
+    # O lixeiro passa toda semana para manter a casa limpa e o disco respirando.
+    block_retention: 168h
+
+storage:
+  trace:
+    backend: local
+    local:
+      # Onde os blocos serão salvos fisicamente
+      path: /tmp/tempo/blocks

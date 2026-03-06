@@ -1,5 +1,5 @@
 # Docker Compose for EleveRats 2026
-# Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, and .NET Minimal API
+# Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, .NET Minimal API, and LGTM Observability
 services:
   # Cloudflare Tunnel - The gatekeeper for Zero Trust security
   tunnel:
@@ -130,7 +130,7 @@ services:
       - eleverats-net
       - rpg-net
 
-  # Redis - Cache in-memory para velocidade absurda e controle de filas
+  # Redis - Cache in-memory
   redis:
     image: redis:8-alpine
     restart: always
@@ -173,10 +173,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0" # Aumentado para anti IDLE retornar para 1.0 CPU e 1GB RAM ao subir aplicação real
+          cpus: "2.0"
           memory: 4G
         reservations:
-          cpus: "0.5" # Aumentado para anti IDLE retornar para 0.1 CPU e 256MB RAM ao subir aplicação real
+          cpus: "0.5"
           memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -190,7 +190,61 @@ services:
     networks:
       - eleverats-net
 
-  # O Coletor de Métricas (O Cérebro)
+  # --- OBSERVABILIDADE (LGTM) ---
+
+  # Grafana Loki - O Diário de Bordo (Logs de App)
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: always
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yaml
+      - loki_data:/loki
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - eleverats-net
+
+  # Promtail - O Carteiro dos Logs
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: always
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 128M
+    networks:
+      - eleverats-net
+
+  # Grafana Tempo - O GPS (Traces)
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    restart: always
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - eleverats-net
+
+  # O Coletor de Métricas
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -210,7 +264,7 @@ services:
     networks:
       - eleverats-net
 
-  # O Painel de Visualização (A Beleza)
+  # O Painel de Visualização
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -231,7 +285,7 @@ services:
     networks:
       - eleverats-net
 
-  # Monitor do Host
+  # Monitores do Host e Containers
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -251,7 +305,6 @@ services:
     networks:
       - eleverats-net
 
-  # Monitor dos Containers
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.2
     container_name: cadvisor
@@ -352,3 +405,15 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/rpg-state/data/foundry
+  loki_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/loki
+  tempo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/tempo

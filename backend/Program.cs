@@ -1,11 +1,38 @@
 using Prometheus;
 using Scalar.AspNetCore;
 using EleveRats.Services;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- 1. Logging Configuration ---
+// Clear default providers and force JSON output to console.
+// This allows Promtail to parse the logs and automatically extract the TraceId.
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+});
+
+// --- 2. OpenTelemetry Tracing Configuration ---
+// Setup distributed tracing to map the entire request lifecycle and send it to Tempo.
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("EleveRats.Api"))
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation(); // Traces incoming HTTP requests
+        tracing.AddHttpClientInstrumentation(); // Traces outgoing HTTP requests (e.g., to n8n)
+        
+        // Export traces to Grafana Tempo via OTLP gRPC endpoint
+        tracing.AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri("http://tempo:4317");
+        });
+    });
+
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddHostedService<AntiIdlenessService>();
@@ -22,7 +49,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Captura métricas HTTP (quantidade de requests, duração, status codes)
+// Captures HTTP metrics (request count, duration, status codes) for Prometheus
 app.UseHttpMetrics();
 
 app.MapGet("/", async (IWebHostEnvironment env) => 
@@ -72,10 +99,10 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-// Expõe o endpoint /metrics para o Prometheus coletar os dados
+// Exposes the /metrics endpoint for Prometheus scraping
 app.MapMetrics();
 
-// Health Check endpoint para o Docker Compose e orquestradores
+// Health Check endpoint for Docker Compose and orchestrators
 app.MapHealthChecks("/health");
 
 app.Run();
