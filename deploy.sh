@@ -6,29 +6,26 @@ echo "⚔️ Iniciando Feitiço de Deploy - EleveRats ⚔️"
 # Carrega variáveis locais se existirem
 [ -f .env ] && export $(grep -v '^#' .env | xargs)
 
-# 1. Busca IP atual para limpeza preventiva
+# 1. Resolve o IP de acesso via Tailscale (o IP público OCI não é mais acessível diretamente)
+SERVER_IP="${TAILSCALE_IP:?'TAILSCALE_IP não definido no .env. Abortando missão.'}"
 cd terraform
 tofu init -upgrade
-OLD_IP=$(tofu output -raw public_ip 2>/dev/null || echo "")
 cd ..
 
 SSH_USER="ubuntu"
 SSH_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_oracle_nave_mae}"
 SSH_KEY_ARG="-i $SSH_KEY_PATH"
 
-if [ -n "$OLD_IP" ] && [ "$OLD_IP" != "No outputs found" ]; then
-  echo "🛑 Desligando motores da Nave-Mãe antiga ($OLD_IP)..."
-  ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$OLD_IP "bash -s" << 'EOF' || true
-    cd /mnt/dados/eleverats && sudo docker compose down || true
-    sync && sudo umount -f /mnt/dados || true
+echo "🛑 Desligando motores da Nave-Mãe ($SERVER_IP via Tailscale)..."
+ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$SERVER_IP "bash -s" << 'EOF' || true
+  cd /mnt/dados/eleverats && sudo docker compose down || true
+  sync && sudo umount -f /mnt/dados || true
 EOF
-fi
 
 # 2. Aplica Infraestrutura (Aqui é onde a paciência com Ashburn entra)
 echo "🌩️ Evocando a Infraestrutura na Oracle Cloud..."
 cd terraform
 tofu apply -auto-approve
-SERVER_IP=$(tofu output -raw public_ip)
 cd ..
 
 # 3. Atualização do Código e Containers
