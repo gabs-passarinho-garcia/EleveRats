@@ -6,20 +6,25 @@ distributor:
   receivers:
     otlp:
       protocols:
-        http:
-        grpc:
-          # A porta onde a sua API .NET vai arremessar os traces
-          endpoint: 0.0.0.0:4317
+        http: # Porta padrão: 4318
+        grpc: # Porta padrão: 4317 (onde a API .NET envia os traces)
+
+# O Ingester é obrigatório mesmo em single-binary mode
+ingester:
+  max_block_duration: 5m
 
 compactor:
   compaction:
-    # Retenção de 7 dias (7 * 24 horas = 168h). 
+    # Retenção de 7 dias (7 * 24 horas = 168h).
     # O lixeiro passa toda semana para manter a casa limpa e o disco respirando.
     block_retention: 168h
 
 storage:
   trace:
     backend: local
+    wal:
+      # WAL (Write-Ahead Log) é obrigatório para o compactor funcionar
+      path: /tmp/tempo/wal
     local:
-      # Onde os blocos serão salvos fisicamente
+      # Onde os blocos compactados serão salvos fisicamente
       path: /tmp/tempo/blocks
