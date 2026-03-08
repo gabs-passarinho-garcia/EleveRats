@@ -1,4 +1,0 @@
-"n8n_user" "n8n_password"
-"plane_user" "plane_password"
-"${DB_USER}" "${DB_PASSWORD}"
-"grafana_reader" "grafana_password"
