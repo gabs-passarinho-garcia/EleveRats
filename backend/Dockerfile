@@ -29,6 +29,11 @@ RUN dotnet publish "EleveRats.csproj" -c Release -o /app/publish /p:UseAppHost=f
 # Usa a imagem oficial do Runtime do ASP.NET Core 10 para rodar a API
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Instala o curl para o healthcheck (e outras ferramentas úteis)
+USER root
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Adiciona um usuário não-root por segurança (opcional, mas recomendado)
 USER $APP_UID
 

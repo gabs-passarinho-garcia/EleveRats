@@ -3,15 +3,14 @@
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 # Docker Compose for EleveRats 2026
 # Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, .NET Minimal API, and LGTM Observability
@@ -219,11 +218,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0"
-          memory: 4G
+          cpus: "1.0"
+          memory: 2G
         reservations:
-          cpus: "0.5"
-          memory: 512M
+          cpus: "0.2"
+          memory: 256M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -278,7 +277,7 @@ services:
     image: grafana/tempo:2.7.2
     container_name: tempo
     restart: always
-    command: [ "-config.file=/etc/tempo.yaml" ]
+    command: ["-config.file=/etc/tempo.yaml"]
     volumes:
       - ./tempo/tempo.yml:/etc/tempo.yaml
       - tempo_data:/tmp/tempo
