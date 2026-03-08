@@ -126,6 +126,8 @@ mkdir -p "$STATE_DIR/data/prometheus" && chown -R 65534:65534 "$STATE_DIR/data/p
 mkdir -p "$STATE_DIR/data/minio" && chown -R 1000:1000 "$STATE_DIR/data/minio"
 mkdir -p "$STATE_DIR/data/loki" && chown -R 10001:10001 "$STATE_DIR/data/loki"
 mkdir -p "$STATE_DIR/data/tempo" && chown -R 10001:10001 "$STATE_DIR/data/tempo"
+mkdir -p "$STATE_DIR/data/rabbitmq" && chown -R 999:999 "$STATE_DIR/data/rabbitmq"
+mkdir -p "$STATE_DIR/data/pgbouncer" && chown -R 999:999 "$STATE_DIR/data/pgbouncer"
 
 cat <<EOF > "$STATE_DIR/.env"
 DB_USER=$DB_USER

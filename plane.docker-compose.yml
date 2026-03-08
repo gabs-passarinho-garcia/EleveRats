@@ -215,6 +215,8 @@ services:
       RABBITMQ_DEFAULT_USER: plane
       RABBITMQ_DEFAULT_PASS: plane
       RABBITMQ_DEFAULT_VHOST: plane
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - eleverats-net
 
