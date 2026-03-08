@@ -82,6 +82,7 @@ services:
       - DEFAULT_POOL_SIZE=20
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - /mnt/dados/eleverats-state/data/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
       - pgbouncer_data:/etc/pgbouncer
     depends_on:
       db:

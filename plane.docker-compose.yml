@@ -103,9 +103,9 @@ services:
       PGHOST: pgbouncer
       PGDATABASE: plane_db
       POSTGRES_USER: plane_user
-      POSTGRES_PASSWORD: plane_password
+      POSTGRES_PASSWORD: ${PLANE_DB_PASSWORD}
       POSTGRES_DB: plane_db
-      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
       # Redis (Index 2)
       REDIS_HOST: redis
@@ -119,10 +119,10 @@ services:
       AWS_S3_BUCKET_NAME: plane-uploads
       MINIO_ENDPOINT_SSL: 0
       # MQ
-      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
+      AMQP_URL: amqp://plane:${RABBITMQ_PASSWORD}@plane-mq:5672/plane
       # Security
-      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
-      LIVE_SERVER_SECRET_KEY: ${PLANE_LIVE_SERVER_SECRET_KEY:-2FiJk1U2aiVPEQtzLehYGlTSnTnrs7LW}
+      SECRET_KEY: ${PLANE_SECRET_KEY}
+      LIVE_SERVER_SECRET_KEY: ${PLANE_LIVE_SERVER_SECRET_KEY}
     depends_on:
       - pgbouncer
       - redis
@@ -144,15 +144,15 @@ services:
           memory: 256M
     environment:
       # Copy same env as API
-      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
-      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
+      AMQP_URL: amqp://plane:${RABBITMQ_PASSWORD}@plane-mq:5672/plane
       AWS_ACCESS_KEY_ID: ${MINIO_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
       AWS_S3_ENDPOINT_URL: http://minio:9000
       AWS_S3_BUCKET_NAME: plane-uploads
-      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
+      SECRET_KEY: ${PLANE_SECRET_KEY}
     depends_on:
       - plane-api
       - pgbouncer
@@ -174,11 +174,11 @@ services:
           cpus: "0.1"
           memory: 128M
     environment:
-      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
-      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
-      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
+      AMQP_URL: amqp://plane:${RABBITMQ_PASSWORD}@plane-mq:5672/plane
+      SECRET_KEY: ${PLANE_SECRET_KEY}
     depends_on:
       - plane-api
       - pgbouncer
@@ -191,7 +191,7 @@ services:
     image: artifacts.plane.so/makeplane/plane-backend:stable
     command: ./bin/docker-entrypoint-migrator.sh
     environment:
-      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
     depends_on:
@@ -213,7 +213,7 @@ services:
           memory: 256M
     environment:
       RABBITMQ_DEFAULT_USER: plane
-      RABBITMQ_DEFAULT_PASS: plane
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: plane
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq

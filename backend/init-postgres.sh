@@ -17,15 +17,15 @@ set -e
 
 # 1. Criando o usuário e o banco de dados (no banco principal/default)
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-	CREATE USER n8n_user WITH ENCRYPTED PASSWORD 'n8n_password';
+	CREATE USER n8n_user WITH ENCRYPTED PASSWORD '$N8N_DB_PASSWORD';
 	CREATE DATABASE n8n_db;
 	GRANT ALL PRIVILEGES ON DATABASE n8n_db TO n8n_user;
 
-	CREATE USER plane_user WITH ENCRYPTED PASSWORD 'plane_password';
+	CREATE USER plane_user WITH ENCRYPTED PASSWORD '$PLANE_DB_PASSWORD';
 	CREATE DATABASE plane_db;
 	GRANT ALL PRIVILEGES ON DATABASE plane_db TO plane_user;
 
-	CREATE USER grafana_reader WITH ENCRYPTED PASSWORD 'grafana_password';
+	CREATE USER grafana_reader WITH ENCRYPTED PASSWORD '$GRAFANA_READER_PASSWORD';
 	GRANT CONNECT ON DATABASE eleverats_db TO grafana_reader;
 EOSQL
 

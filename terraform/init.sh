@@ -108,12 +108,18 @@ CF_TUNNEL_TOKEN=$(/root/bin/oci secrets secret-bundle get --secret-id ${cf_tunne
 FOUNDRY_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 FOUNDRY_USERNAME=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_username_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 FOUNDRY_ADMIN_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${foundry_admin_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+N8N_DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${n8n_db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+PLANE_DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+RABBITMQ_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${rabbitmq_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+GRAFANA_READER_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${grafana_reader_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+PLANE_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+PLANE_LIVE_SERVER_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_live_server_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 STATE_DIR="/mnt/dados/eleverats-state"
 echo "📂 Criando diretórios persistentes em $STATE_DIR e ajustando permissões..."
 
 # Cria a pasta raiz e a subpasta data, garantindo que o ubuntu é o dono inicial
-mkdir -p "$STATE_DIR/data"
+mkdir -p "$STATE_DIR/data/pgbouncer"
 chown ubuntu:ubuntu "$STATE_DIR"
 chown ubuntu:ubuntu "$STATE_DIR/data"
 
@@ -136,16 +142,32 @@ MINIO_USER=$MINIO_USER
 MINIO_PASSWORD=$MINIO_PASSWORD
 REDIS_PASSWORD=$REDIS_PASSWORD
 GRAFANA_PASSWORD=$GRAFANA_PASSWORD
+GRAFANA_READER_PASSWORD=$GRAFANA_READER_PASSWORD
 N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
+N8N_DB_PASSWORD=$N8N_DB_PASSWORD
 CF_TUNNEL_TOKEN=$CF_TUNNEL_TOKEN
 FOUNDRY_PASSWORD=$FOUNDRY_PASSWORD
 FOUNDRY_USERNAME=$FOUNDRY_USERNAME
 FOUNDRY_ADMIN_KEY=$FOUNDRY_ADMIN_KEY
+PLANE_DB_PASSWORD=$PLANE_DB_PASSWORD
+PLANE_SECRET_KEY=$PLANE_SECRET_KEY
+PLANE_LIVE_SERVER_SECRET_KEY=$PLANE_LIVE_SERVER_SECRET_KEY
+RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD
 EOF
 
-# Ajuste seguro apenas no .env
+# Gera o userlist.txt pro pgBouncer a partir das senhas do cofre
+cat <<EOF > "$STATE_DIR/data/pgbouncer/userlist.txt"
+"n8n_user" "$N8N_DB_PASSWORD"
+"plane_user" "$PLANE_DB_PASSWORD"
+"$DB_USER" "$DB_PASSWORD"
+"grafana_reader" "$GRAFANA_READER_PASSWORD"
+EOF
+
+# Ajuste seguro pro .env e pro userlist
 chown ubuntu:ubuntu "$STATE_DIR/.env"
 chmod 600 "$STATE_DIR/.env"
+chown 999:999 "$STATE_DIR/data/pgbouncer/userlist.txt"
+chmod 600 "$STATE_DIR/data/pgbouncer/userlist.txt"
 
 sudo tailscale up
 

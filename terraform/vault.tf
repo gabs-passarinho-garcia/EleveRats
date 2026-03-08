@@ -55,6 +55,36 @@ resource "random_id" "n8n_encryption_key" {
   byte_length = 32
 }
 
+resource "random_password" "n8n_db_password" {
+  length  = 20
+  special = false
+}
+
+resource "random_password" "plane_db_password" {
+  length  = 20
+  special = false
+}
+
+resource "random_password" "rabbitmq_password" {
+  length  = 20
+  special = false
+}
+
+resource "random_password" "grafana_reader_password" {
+  length  = 20
+  special = false
+}
+
+resource "random_password" "plane_secret_key" {
+  length  = 48
+  special = false
+}
+
+resource "random_password" "plane_live_server_secret_key" {
+  length  = 32
+  special = false
+}
+
 # 2. Cria o Vault (Cofre) Always Free
 resource "oci_kms_vault" "eleverats_vault" {
   compartment_id = var.compartment_ocid
@@ -260,6 +290,114 @@ resource "oci_vault_secret" "foundry_admin_key_secret" {
     content      = base64encode(var.foundry_admin_key)
     content_type = "BASE64"
     stage        = "CURRENT"
+  }
+}
+
+resource "oci_vault_secret" "n8n_db_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "n8n-db-password"
+  description    = "Senha do usuario n8n_user no PostgreSQL"
+
+  secret_content {
+    content      = base64encode(random_password.n8n_db_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "plane_db_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "plane-db-password"
+  description    = "Senha do usuario plane_user no PostgreSQL"
+
+  secret_content {
+    content      = base64encode(random_password.plane_db_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "rabbitmq_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "rabbitmq-password"
+  description    = "Senha do RabbitMQ para o stack Plane"
+
+  secret_content {
+    content      = base64encode(random_password.rabbitmq_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "grafana_reader_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "grafana-reader-password"
+  description    = "Senha do usuario grafana_reader (ready-only) no PostgreSQL"
+
+  secret_content {
+    content      = base64encode(random_password.grafana_reader_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "plane_secret_key_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "plane-secret-key"
+  description    = "SECRET_KEY para o Django do Plane"
+
+  secret_content {
+    content      = base64encode(random_password.plane_secret_key.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "plane_live_server_secret_key_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "plane-live-server-secret-key"
+  description    = "LIVE_SERVER_SECRET_KEY para o Plane"
+
+  secret_content {
+    content      = base64encode(random_password.plane_live_server_secret_key.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
   }
 }
 

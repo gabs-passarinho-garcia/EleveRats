@@ -144,6 +144,12 @@ resource "oci_core_instance" "nave_mae" {
       foundry_password_secret_id   = oci_vault_secret.foundry_password_secret.id
       foundry_username_secret_id   = oci_vault_secret.foundry_username_secret.id
       foundry_admin_key_secret_id  = oci_vault_secret.foundry_admin_key_secret.id
+      n8n_db_password_secret_id        = oci_vault_secret.n8n_db_password_secret.id
+      plane_db_password_secret_id      = oci_vault_secret.plane_db_password_secret.id
+      rabbitmq_password_secret_id      = oci_vault_secret.rabbitmq_password_secret.id
+      grafana_reader_password_secret_id = oci_vault_secret.grafana_reader_password_secret.id
+      plane_secret_key_secret_id       = oci_vault_secret.plane_secret_key_secret.id
+      plane_live_server_secret_key_secret_id = oci_vault_secret.plane_live_server_secret_key_secret.id
     }))
   }
 

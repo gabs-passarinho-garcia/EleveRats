@@ -70,6 +70,9 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
   # Injecta o ambiente de volta no código clonado para o docker-compose fazer o parser das strings
   sudo cp /mnt/dados/eleverats-state/.env $DEST_DIR/.env
   
+  # Garante que pgbouncer.ini está lá (já vem no git clone, mas é bom validar)
+  [ -f $DEST_DIR/pgbouncer/pgbouncer.ini ] || echo "⚠️ pgbouncer.ini ausente!"
+
   cd $DEST_DIR
   sudo chown -R $SSH_USER:$SSH_USER $DEST_DIR
 
