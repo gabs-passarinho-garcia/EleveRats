@@ -225,6 +225,7 @@ services:
     restart: always
     environment:
       APP_DOMAIN: plane.gabspassarinhogarcia.uk
+      SITE_ADDRESS: plane.gabspassarinhogarcia.uk
       LISTEN_HTTP_PORT: 80
       UPSTREAM_WEB: plane-web:3000
       UPSTREAM_API: plane-api:8000

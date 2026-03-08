@@ -24,6 +24,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 	CREATE USER plane_user WITH ENCRYPTED PASSWORD 'plane_password';
 	CREATE DATABASE plane_db;
 	GRANT ALL PRIVILEGES ON DATABASE plane_db TO plane_user;
+
+	CREATE USER grafana_reader WITH ENCRYPTED PASSWORD 'grafana_password';
+	GRANT CONNECT ON DATABASE eleverats_db TO grafana_reader;
 EOSQL
 
 # 2. O Remédio para o Postgres 15+:
@@ -37,4 +40,10 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "plane_db" <<-EOSQL
 	GRANT ALL ON SCHEMA public TO plane_user;
 	ALTER SCHEMA public OWNER TO plane_user;
+EOSQL
+# Permissionamento para o Grafana (Read-only)
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "eleverats_db" <<-EOSQL
+	GRANT USAGE ON SCHEMA public TO grafana_reader;
+	GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana_reader;
+	ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO grafana_reader;
 EOSQL
