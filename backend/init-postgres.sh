@@ -32,3 +32,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "n8n_db" <<-EOSQL
 	GRANT ALL ON SCHEMA public TO n8n_user;
 	ALTER SCHEMA public OWNER TO n8n_user;
 EOSQL
+
+# The Postgres 15+ remedy applied to Plane DB
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "plane_db" <<-EOSQL
+	GRANT ALL ON SCHEMA public TO plane_user;
+	ALTER SCHEMA public OWNER TO plane_user;
+EOSQL

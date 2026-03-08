@@ -1,3 +1,17 @@
+# Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 # Plane Community Edition - Sub-stack for EleveRats
 # This file is included by the main docker-compose.yml
 
@@ -92,6 +106,7 @@ services:
       POSTGRES_PASSWORD: plane_password
       POSTGRES_DB: plane_db
       DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DISABLE_SERVER_SIDE_CURSORS: 1
       # Redis (Index 2)
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -130,6 +145,7 @@ services:
     environment:
       # Copy same env as API
       DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
       AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
       AWS_ACCESS_KEY_ID: ${MINIO_USER}
@@ -139,7 +155,7 @@ services:
       SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
     depends_on:
       - plane-api
-      - db
+      - pgbouncer
       - redis
       - plane-mq
     networks:
@@ -159,12 +175,13 @@ services:
           memory: 128M
     environment:
       DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
       AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
       SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
     depends_on:
       - plane-api
-      - db
+      - pgbouncer
       - redis
       - plane-mq
     networks:
@@ -175,6 +192,7 @@ services:
     command: ./bin/docker-entrypoint-migrator.sh
     environment:
       DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
     depends_on:
       - pgbouncer
