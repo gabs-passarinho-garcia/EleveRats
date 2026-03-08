@@ -45,7 +45,11 @@ services:
           cpus: "0.1"
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3000/spaces/ >/dev/null || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O- http://127.0.0.1:3000/spaces/ >/dev/null || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -233,7 +237,7 @@ services:
     restart: always
     environment:
       APP_DOMAIN: plane.gabspassarinhogarcia.uk
-      SITE_ADDRESS: plane.gabspassarinhogarcia.uk
+      SITE_ADDRESS: plane.gabspassarinhogarcia.uk:80
       LISTEN_HTTP_PORT: 80
       UPSTREAM_WEB: plane-web:3000
       UPSTREAM_API: plane-api:8000
