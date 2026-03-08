@@ -31,7 +31,9 @@ services:
       - plane-api
       - plane-worker
     networks:
-      - eleverats-net
+      eleverats-net:
+        aliases:
+          - web
 
   plane-space:
     image: artifacts.plane.so/makeplane/plane-space:stable
@@ -58,7 +60,9 @@ services:
       - plane-worker
       - plane-web
     networks:
-      - eleverats-net
+      eleverats-net:
+        aliases:
+          - space
 
   plane-admin:
     image: artifacts.plane.so/makeplane/plane-admin:stable
@@ -75,7 +79,9 @@ services:
       - plane-api
       - plane-web
     networks:
-      - eleverats-net
+      eleverats-net:
+        aliases:
+          - admin
 
   plane-live:
     image: artifacts.plane.so/makeplane/plane-live:stable
@@ -90,7 +96,9 @@ services:
       - plane-api
       - plane-web
     networks:
-      - eleverats-net
+      eleverats-net:
+        aliases:
+          - live
 
   plane-api:
     image: artifacts.plane.so/makeplane/plane-backend:stable
@@ -138,7 +146,9 @@ services:
       - redis
       - plane-mq
     networks:
-      - eleverats-net
+      eleverats-net:
+        aliases:
+          - api
 
   plane-worker:
     image: artifacts.plane.so/makeplane/plane-backend:stable

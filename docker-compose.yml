@@ -123,8 +123,10 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - eleverats-net
-      - rpg-net
+      eleverats-net:
+        aliases:
+          - plane-minio
+      rpg-net:
 
   # n8n - The webhook receiver and initial validation gateway
   n8n:
