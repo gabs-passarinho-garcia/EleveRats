@@ -232,6 +232,7 @@ services:
       UPSTREAM_SPACE: plane-space:3000
       UPSTREAM_ADMIN: plane-admin:3000
       UPSTREAM_LIVE: plane-live:8080
+      FILE_SIZE_LIMIT: 50MB
     depends_on:
       - plane-web
       - plane-api

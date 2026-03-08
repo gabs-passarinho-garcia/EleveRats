@@ -87,6 +87,36 @@ output "foundry_admin_key_secret_id" {
   value       = oci_vault_secret.foundry_admin_key_secret.id
 }
 
+output "n8n_db_password_secret_id" {
+  description = "OCID do Segredo da Senha do Banco de Dados do n8n no Vault"
+  value       = oci_vault_secret.n8n_db_password_secret.id
+}
+
+output "plane_db_password_secret_id" {
+  description = "OCID do Segredo da Senha do Banco de Dados do Plane no Vault"
+  value       = oci_vault_secret.plane_db_password_secret.id
+}
+
+output "rabbitmq_password_secret_id" {
+  description = "OCID do Segredo da Senha do RabbitMQ no Vault"
+  value       = oci_vault_secret.rabbitmq_password_secret.id
+}
+
+output "grafana_reader_password_secret_id" {
+  description = "OCID do Segredo da Senha do Grafana Reader no Vault"
+  value       = oci_vault_secret.grafana_reader_password_secret.id
+}
+
+output "plane_secret_key_secret_id" {
+  description = "OCID do Segredo da SECRET_KEY do Plane no Vault"
+  value       = oci_vault_secret.plane_secret_key_secret.id
+}
+
+output "plane_live_server_secret_key_secret_id" {
+  description = "OCID do Segredo da LIVE_SERVER_SECRET_KEY do Plane no Vault"
+  value       = oci_vault_secret.plane_live_server_secret_key_secret.id
+}
+
 output "comando_recuperar_senha" {
   description = "Execute este comando na sua máquina com OCI CLI configurado para ver a senha do banco gerada (ou acesse a interface da OCI no painel do Vault):"
   value       = "oci vault secret-bundle get --secret-id ${oci_vault_secret.db_password_secret.id} --query 'data.\"secret-bundle-content\".content' --raw-output | base64 --decode"
