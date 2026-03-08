@@ -1,0 +1,238 @@
+# Plane Community Edition - Sub-stack for EleveRats
+# This file is included by the main docker-compose.yml
+
+services:
+  plane-web:
+    image: artifacts.plane.so/makeplane/plane-frontend:stable
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    depends_on:
+      - plane-api
+      - plane-worker
+    networks:
+      - eleverats-net
+
+  plane-space:
+    image: artifacts.plane.so/makeplane/plane-space:stable
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    depends_on:
+      - plane-api
+      - plane-worker
+      - plane-web
+    networks:
+      - eleverats-net
+
+  plane-admin:
+    image: artifacts.plane.so/makeplane/plane-admin:stable
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    depends_on:
+      - plane-api
+      - plane-web
+    networks:
+      - eleverats-net
+
+  plane-live:
+    image: artifacts.plane.so/makeplane/plane-live:stable
+    restart: always
+    environment:
+      API_BASE_URL: http://plane-api:8000
+      LIVE_SERVER_SECRET_KEY: ${PLANE_LIVE_SERVER_SECRET_KEY:-2FiJk1U2aiVPEQtzLehYGlTSnTnrs7LW}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
+    depends_on:
+      - plane-api
+      - plane-web
+    networks:
+      - eleverats-net
+
+  plane-api:
+    image: artifacts.plane.so/makeplane/plane-backend:stable
+    command: ./bin/docker-entrypoint-api.sh
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.2"
+          memory: 256M
+    environment:
+      WEB_URL: https://plane.gabspassarinhogarcia.uk
+      DEBUG: 0
+      CORS_ALLOWED_ORIGINS: https://plane.gabspassarinhogarcia.uk
+      # Database
+      PGHOST: pgbouncer
+      PGDATABASE: plane_db
+      POSTGRES_USER: plane_user
+      POSTGRES_PASSWORD: plane_password
+      POSTGRES_DB: plane_db
+      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      # Redis (Index 2)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
+      # MinIO (using existing service)
+      USE_MINIO: 1
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_BUCKET_NAME: plane-uploads
+      MINIO_ENDPOINT_SSL: 0
+      # MQ
+      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
+      # Security
+      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
+      LIVE_SERVER_SECRET_KEY: ${PLANE_LIVE_SERVER_SECRET_KEY:-2FiJk1U2aiVPEQtzLehYGlTSnTnrs7LW}
+    depends_on:
+      - pgbouncer
+      - redis
+      - plane-mq
+    networks:
+      - eleverats-net
+
+  plane-worker:
+    image: artifacts.plane.so/makeplane/plane-backend:stable
+    command: ./bin/docker-entrypoint-worker.sh
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.2"
+          memory: 256M
+    environment:
+      # Copy same env as API
+      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
+      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_BUCKET_NAME: plane-uploads
+      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
+    depends_on:
+      - plane-api
+      - db
+      - redis
+      - plane-mq
+    networks:
+      - eleverats-net
+
+  plane-beat-worker:
+    image: artifacts.plane.so/makeplane/plane-backend:stable
+    command: ./bin/docker-entrypoint-beat.sh
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    environment:
+      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
+      AMQP_URL: amqp://plane:plane@plane-mq:5672/plane
+      SECRET_KEY: ${PLANE_SECRET_KEY:-60gp0byfz2dvffa45cxl20p1scy9xbpf6d8c5y0geejgkyp1b5}
+    depends_on:
+      - plane-api
+      - db
+      - redis
+      - plane-mq
+    networks:
+      - eleverats-net
+
+  plane-migrator:
+    image: artifacts.plane.so/makeplane/plane-backend:stable
+    command: ./bin/docker-entrypoint-migrator.sh
+    environment:
+      DATABASE_URL: postgresql://plane_user:plane_password@pgbouncer/plane_db
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
+    depends_on:
+      - pgbouncer
+      - redis
+    networks:
+      - eleverats-net
+
+  plane-mq:
+    image: rabbitmq:3.13-management-alpine
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+    environment:
+      RABBITMQ_DEFAULT_USER: plane
+      RABBITMQ_DEFAULT_PASS: plane
+      RABBITMQ_DEFAULT_VHOST: plane
+    networks:
+      - eleverats-net
+
+  plane-proxy:
+    image: artifacts.plane.so/makeplane/plane-proxy:stable
+    restart: always
+    environment:
+      APP_DOMAIN: plane.gabspassarinhogarcia.uk
+      LISTEN_HTTP_PORT: 80
+      UPSTREAM_WEB: plane-web:3000
+      UPSTREAM_API: plane-api:8000
+      UPSTREAM_SPACE: plane-space:3000
+      UPSTREAM_ADMIN: plane-admin:3000
+      UPSTREAM_LIVE: plane-live:8080
+    depends_on:
+      - plane-web
+      - plane-api
+      - plane-space
+      - plane-admin
+      - plane-live
+    ports:
+      - "8081:80" # Mapping to 8081 on host to avoid conflict with other apps if needed
+    networks:
+      - eleverats-net
+
+  # MinIO Initializer - Automatically creates the bucket for Plane
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD}) do echo '...waiting for minio...' && sleep 1; done;
+      /usr/bin/mc mb local/plane-uploads || true;
+      /usr/bin/mc anonymous set public local/plane-uploads;
+      exit 0;
+      "
+    networks:
+      - eleverats-net

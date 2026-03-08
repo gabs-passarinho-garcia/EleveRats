@@ -15,6 +15,9 @@
 
 # Docker Compose for EleveRats 2026
 # Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, .NET Minimal API, and LGTM Observability
+include:
+  - plane.docker-compose.yml
+
 services:
   # Cloudflare Tunnel - The gatekeeper for Zero Trust security
   tunnel:
@@ -67,6 +70,33 @@ services:
     networks:
       - eleverats-net
 
+  # pgBouncer - Connection pooling for all databases
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/eleverats_db
+      - MAX_CLIENT_CONN=200
+      - DEFAULT_POOL_SIZE=20
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    networks:
+      - eleverats-net
+
   # MinIO - Object storage for heavy media (workout proofs)
   minio:
     image: minio/minio:latest
@@ -105,7 +135,7 @@ services:
       - /mnt/dados/eleverats-state/.env
     environment:
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_HOST=pgbouncer
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=n8n_db
       - DB_POSTGRESDB_USER=n8n_user
@@ -118,6 +148,7 @@ services:
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
       - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - QUEUE_BULL_REDIS_DB=1
       - N8N_METRICS=true
     deploy:
       resources:
@@ -139,7 +170,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
-      - db
+      - pgbouncer
       - redis
     networks:
       - eleverats-net
@@ -179,7 +210,7 @@ services:
     env_file:
       - /mnt/dados/eleverats-state/.env
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Database=eleverats_db;Username=${DB_USER};Password=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=pgbouncer;Database=eleverats_db;Username=${DB_USER};Password=${DB_PASSWORD}
       - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD}
       - Minio__Endpoint=minio:9000
       - Minio__AccessKey=${MINIO_USER}
@@ -199,7 +230,7 @@ services:
       timeout: 10s
       retries: 3
     depends_on:
-      - db
+      - pgbouncer
       - minio
       - redis
     networks:
