@@ -83,9 +83,13 @@ netfilter-persistent save
 # 4. SETUP DO OCI CLI E SECRETS (VAULT)
 # ==========================================
 apt-get install -y python3-pip
-# Instalação silenciosa do OCI CLI só se não estiver instalado
-if ! command -v /root/bin/oci &> /dev/null; then
-  bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)" -s --accept-all-defaults
+# Instalação silenciosa do OCI CLI só se não estiver instalado ou estiver quebrado
+if ! /root/bin/oci --version &> /dev/null; then
+  echo "OCI CLI não encontrado ou quebrado. Limpando rastros e instalando..."
+  rm -rf /root/lib/oracle-cli /root/bin/oci
+  curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh -o install_oci.sh
+  bash install_oci.sh --accept-all-defaults
+  rm install_oci.sh
 fi
 
 # Garante que o OCI CLI está no PATH para o root
