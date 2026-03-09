@@ -35,11 +35,11 @@ using System.Text;
 /// </summary>
 public class AntiIdlenessService : BackgroundService
 {
-    private readonly ConcurrentDictionary<string, byte[]> storage = new();
-
     // Alvo: Manter ~3GB de RAM ocupados (3000 entradas de ~1MB cada)
     private const int TargetRamEntries = 3000;
     private const int BatchDeleteSize = 500;
+
+    private readonly ConcurrentDictionary<string, byte[]> storage = new();
 
     private readonly string[] loremWords = "lorem ipsum dolor sit amet consectetur adipiscing elit".Split(' ');
 

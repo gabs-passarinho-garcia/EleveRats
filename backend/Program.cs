@@ -22,7 +22,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// using EleveRats.Services;
+using EleveRats.Core;
+using EleveRats.Services;
 using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -52,16 +53,13 @@ builder.Services.AddOpenTelemetry()
         tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
 
         // Export traces to Grafana Tempo via OTLP gRPC endpoint
-        tracing.AddOtlpExporter(opt =>
-        {
-            opt.Endpoint = new Uri("http://tempo:4317");
-        });
+        tracing.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.TempoEndpoint));
     });
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
-// builder.Services.AddHostedService<AntiIdlenessService>();
+builder.Services.AddHostedService<AntiIdlenessService>();
 
 var app = builder.Build();
 
@@ -106,32 +104,10 @@ app.MapGet("/", async (IWebHostEnvironment env) =>
     return Results.Content(html, "text/html");
 });
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching",
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast(
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 // Exposes the /metrics endpoint for Prometheus scraping
 app.MapMetrics();
 
 // Health Check endpoint for Docker Compose and orchestrators
 app.MapHealthChecks("/health");
 
-app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
-}
+await app.RunAsync();
