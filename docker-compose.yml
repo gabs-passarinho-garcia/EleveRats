@@ -402,7 +402,7 @@ services:
       - rpg-net
   # Metabase - Business Intelligence for the Rat-Pack
   metabase:
-    image: metabase/metabase:v0.53.5
+    image: ghcr.io/dockarm/metabase-arm:v0.53.5
     platform: linux/amd64
     restart: always
     env_file:
