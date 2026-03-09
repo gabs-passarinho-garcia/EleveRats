@@ -114,6 +114,7 @@ RABBITMQ_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${rabbit
 GRAFANA_READER_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${grafana_reader_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 PLANE_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 PLANE_LIVE_SERVER_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_live_server_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+METABASE_DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${metabase_db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 STATE_DIR="/mnt/dados/eleverats-state"
 echo "📂 Criando diretórios persistentes em $STATE_DIR e ajustando permissões..."
@@ -134,6 +135,7 @@ mkdir -p "$STATE_DIR/data/loki" && chown -R 10001:10001 "$STATE_DIR/data/loki"
 mkdir -p "$STATE_DIR/data/tempo" && chown -R 10001:10001 "$STATE_DIR/data/tempo"
 mkdir -p "$STATE_DIR/data/rabbitmq" && chown -R 999:999 "$STATE_DIR/data/rabbitmq"
 mkdir -p "$STATE_DIR/data/pgbouncer" && chown -R 70:70 "$STATE_DIR/data/pgbouncer"
+mkdir -p "$STATE_DIR/data/metabase" && chown -R 2000:2000 "$STATE_DIR/data/metabase"
 
 cat <<EOF > "$STATE_DIR/.env"
 DB_USER="$DB_USER"
@@ -153,12 +155,14 @@ PLANE_DB_PASSWORD="$PLANE_DB_PASSWORD"
 PLANE_SECRET_KEY="$PLANE_SECRET_KEY"
 PLANE_LIVE_SERVER_SECRET_KEY="$PLANE_LIVE_SERVER_SECRET_KEY"
 RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD"
+METABASE_DB_PASSWORD="$METABASE_DB_PASSWORD"
 EOF
 
 # Gera o userlist.txt pro pgBouncer a partir das senhas do cofre
 cat <<EOF > "$STATE_DIR/data/pgbouncer/userlist.txt"
 "n8n_user" "$N8N_DB_PASSWORD"
 "plane_user" "$PLANE_DB_PASSWORD"
+"metabase_user" "$METABASE_DB_PASSWORD"
 "$DB_USER" "$DB_PASSWORD"
 "grafana_reader" "$GRAFANA_READER_PASSWORD"
 EOF

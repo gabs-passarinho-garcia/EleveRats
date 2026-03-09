@@ -117,7 +117,17 @@ output "plane_live_server_secret_key_secret_id" {
   value       = oci_vault_secret.plane_live_server_secret_key_secret.id
 }
 
+output "metabase_db_password_secret_id" {
+  description = "OCID do Segredo da Senha do Banco de Dados do Metabase no Vault"
+  value       = oci_vault_secret.metabase_db_password_secret.id
+}
+
 output "comando_recuperar_senha" {
   description = "Execute este comando na sua máquina com OCI CLI configurado para ver a senha do banco gerada (ou acesse a interface da OCI no painel do Vault):"
   value       = "oci vault secret-bundle get --secret-id ${oci_vault_secret.db_password_secret.id} --query 'data.\"secret-bundle-content\".content' --raw-output | base64 --decode"
+}
+
+output "comando_recuperar_senha_metabase" {
+  description = "Execute este comando para ver a senha do Metabase:"
+  value       = "oci vault secret-bundle get --secret-id ${oci_vault_secret.metabase_db_password_secret.id} --query 'data.\"secret-bundle-content\".content' --raw-output | base64 --decode"
 }

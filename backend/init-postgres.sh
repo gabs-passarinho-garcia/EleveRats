@@ -27,6 +27,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
 	CREATE USER grafana_reader WITH ENCRYPTED PASSWORD '$GRAFANA_READER_PASSWORD';
 	GRANT CONNECT ON DATABASE eleverats_db TO grafana_reader;
+
+	CREATE USER metabase_user WITH ENCRYPTED PASSWORD '$METABASE_DB_PASSWORD';
+	CREATE DATABASE metabase_db;
+	GRANT ALL PRIVILEGES ON DATABASE metabase_db TO metabase_user;
 EOSQL
 
 # 2. O Remédio para o Postgres 15+:
@@ -40,6 +44,12 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "plane_db" <<-EOSQL
 	GRANT ALL ON SCHEMA public TO plane_user;
 	ALTER SCHEMA public OWNER TO plane_user;
+EOSQL
+
+# The Postgres 15+ remedy applied to Metabase DB
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "metabase_db" <<-EOSQL
+	GRANT ALL ON SCHEMA public TO metabase_user;
+	ALTER SCHEMA public OWNER TO metabase_user;
 EOSQL
 # Permissionamento para o Grafana (Read-only)
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "eleverats_db" <<-EOSQL

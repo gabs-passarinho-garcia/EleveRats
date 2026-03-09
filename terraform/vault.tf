@@ -85,6 +85,11 @@ resource "random_password" "plane_live_server_secret_key" {
   special = false
 }
 
+resource "random_password" "metabase_db_password" {
+  length  = 20
+  special = false
+}
+
 # 2. Cria o Vault (Cofre) Always Free
 resource "oci_kms_vault" "eleverats_vault" {
   compartment_id = var.compartment_ocid
@@ -392,6 +397,24 @@ resource "oci_vault_secret" "plane_live_server_secret_key_secret" {
 
   secret_content {
     content      = base64encode(random_password.plane_live_server_secret_key.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
+resource "oci_vault_secret" "metabase_db_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "metabase-db-password"
+  description    = "Senha do usuario metabase_user (internal state) no PostgreSQL"
+
+  secret_content {
+    content      = base64encode(random_password.metabase_db_password.result)
     content_type = "BASE64"
     stage        = "CURRENT"
   }

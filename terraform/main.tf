@@ -150,6 +150,7 @@ resource "oci_core_instance" "nave_mae" {
       grafana_reader_password_secret_id = oci_vault_secret.grafana_reader_password_secret.id
       plane_secret_key_secret_id       = oci_vault_secret.plane_secret_key_secret.id
       plane_live_server_secret_key_secret_id = oci_vault_secret.plane_live_server_secret_key_secret.id
+      metabase_db_password_secret_id = oci_vault_secret.metabase_db_password_secret.id
     }))
   }
 

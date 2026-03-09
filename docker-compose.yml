@@ -400,6 +400,39 @@ services:
           memory: 1G
     networks:
       - rpg-net
+  # Metabase - Business Intelligence for the Rat-Pack
+  metabase:
+    image: metabase/metabase:v0.53.5
+    restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase_db
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase_user
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=pgbouncer
+      - MB_JETTY_PORT=3001
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.2"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - metabase_data:/metabase-data
+    depends_on:
+      - pgbouncer
+    networks:
+      - eleverats-net
 
 networks:
   eleverats-net:
@@ -468,3 +501,9 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/pgbouncer
+  metabase_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/metabase
