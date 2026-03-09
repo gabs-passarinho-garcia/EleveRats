@@ -17,7 +17,7 @@
 
 using Prometheus;
 using Scalar.AspNetCore;
-// using EleveRats.Services;
+using EleveRats.Services;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Npgsql;
@@ -54,7 +54,7 @@ builder.Services.AddOpenTelemetry()
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
-// builder.Services.AddHostedService<AntiIdlenessService>();
+builder.Services.AddHostedService<AntiIdlenessService>();
 
 var app = builder.Build();
 
