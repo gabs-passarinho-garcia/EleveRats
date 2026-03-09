@@ -1,26 +1,33 @@
+// <copyright file="Program.cs" company="PlaceholderCompany">
+// Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// </copyright>
+
 /*
  * Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-using Prometheus;
-using Scalar.AspNetCore;
 using EleveRats.Services;
+using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Npgsql;
+using Prometheus;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +50,7 @@ builder.Services.AddOpenTelemetry()
         tracing.AddAspNetCoreInstrumentation(); // Traces incoming HTTP requests
         tracing.AddHttpClientInstrumentation(); // Traces outgoing HTTP requests (e.g., to n8n)
         tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
-        
+
         // Export traces to Grafana Tempo via OTLP gRPC endpoint
         tracing.AddOtlpExporter(opt =>
         {
@@ -71,20 +78,20 @@ app.UseStaticFiles();
 // Captures HTTP metrics (request count, duration, status codes) for Prometheus
 app.UseHttpMetrics();
 
-app.MapGet("/", async (IWebHostEnvironment env) => 
+app.MapGet("/", async (IWebHostEnvironment env) =>
 {
     var dotnetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
     var filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
-    
-    if (!System.IO.File.Exists(filePath)) 
+
+    if (!System.IO.File.Exists(filePath))
     {
         return Results.NotFound("index.html not found");
     }
-    
+
     var html = await System.IO.File.ReadAllTextAsync(filePath);
     html = html.Replace("{{dotnetVersion}}", dotnetVersion);
-    
-    var docsButton = env.IsDevelopment() 
+
+    var docsButton = env.IsDevelopment()
         ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
             <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
                 <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>
@@ -93,26 +100,24 @@ app.MapGet("/", async (IWebHostEnvironment env) =>
             Documentação
         </a>"
         : string.Empty;
-        
+
     html = html.Replace("{{docsButton}}", docsButton);
-    
+
     return Results.Content(html, "text/html");
 });
 
 var summaries = new[]
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching",
 };
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
+    var forecast = Enumerable.Range(1, 5).Select(index =>
+        new WeatherForecast(
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
+            summaries[Random.Shared.Next(summaries.Length)]))
         .ToArray();
     return forecast;
 })
@@ -126,7 +131,7 @@ app.MapHealthChecks("/health");
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
 }
