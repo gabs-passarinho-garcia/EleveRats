@@ -11,9 +11,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 # Plane Community Edition - Sub-stack for EleveRats
-# This file is included by the main docker-compose.yml
+# Purified version: No Caddy Proxy, S3 Public Routing, and Subdomain support
 
 services:
   plane-web:
@@ -48,10 +47,7 @@ services:
           memory: 128M
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "wget -q -O- http://127.0.0.1:3000/spaces/ >/dev/null || exit 1",
-        ]
+        ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3000/ >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -113,10 +109,19 @@ services:
           cpus: "0.2"
           memory: 256M
     environment:
+      # --- URLs de Acesso Público ---
       WEB_URL: https://plane.gabspassarinhogarcia.uk
-      DEBUG: 0
-      CORS_ALLOWED_ORIGINS: https://plane.gabspassarinhogarcia.uk
-      # Database
+      CORS_ALLOWED_ORIGINS: https://plane.gabspassarinhogarcia.uk,https://admin-plane.gabspassarinhogarcia.uk,https://spaces-plane.gabspassarinhogarcia.uk
+
+      # --- Configuração do MinIO (Via Túnel Cloudflare) ---
+      USE_MINIO: 1
+      AWS_S3_ENDPOINT_URL: https://s3-eleverats.gabspassarinhogarcia.uk
+      AWS_S3_BUCKET_NAME: plane-uploads
+      MINIO_ENDPOINT_SSL: 1
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+
+      # --- Infraestrutura Interna ---
       PGHOST: pgbouncer
       PGDATABASE: plane_db
       POSTGRES_USER: plane_user
@@ -124,23 +129,14 @@ services:
       POSTGRES_DB: plane_db
       DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
-      # Redis (Index 2)
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
-      # MinIO (using existing service)
-      USE_MINIO: 1
-      AWS_ACCESS_KEY_ID: ${MINIO_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
-      AWS_S3_ENDPOINT_URL: http://minio:9000
-      AWS_S3_BUCKET_NAME: plane-uploads
-      MINIO_ENDPOINT_SSL: 0
-      # MQ
       AMQP_URL: amqp://plane:${RABBITMQ_PASSWORD}@plane-mq:5672/plane
-      # Security
       SECRET_KEY: ${PLANE_SECRET_KEY}
       LIVE_SERVER_SECRET_KEY: ${PLANE_LIVE_SERVER_SECRET_KEY}
       GUNICORN_WORKERS: 2
+      DEBUG: 0
     depends_on:
       - pgbouncer
       - redis
@@ -163,14 +159,14 @@ services:
           cpus: "0.2"
           memory: 256M
     environment:
-      # Copy same env as API
+      # Sincronizado com a API
       DATABASE_URL: postgresql://plane_user:${PLANE_DB_PASSWORD}@pgbouncer/plane_db
       DISABLE_SERVER_SIDE_CURSORS: 1
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/2
       AMQP_URL: amqp://plane:${RABBITMQ_PASSWORD}@plane-mq:5672/plane
       AWS_ACCESS_KEY_ID: ${MINIO_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
-      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_S3_ENDPOINT_URL: https://s3-eleverats.gabspassarinhogarcia.uk
       AWS_S3_BUCKET_NAME: plane-uploads
       SECRET_KEY: ${PLANE_SECRET_KEY}
       GUNICORN_WORKERS: 2
@@ -242,7 +238,6 @@ services:
     networks:
       - eleverats-net
 
-  # MinIO Initializer - Automatically creates the bucket for Plane
   minio-init:
     image: minio/mc:latest
     depends_on:
