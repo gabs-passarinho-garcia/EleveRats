@@ -68,3 +68,4 @@ data/**
 
 **/userlist.txt
 pgbouncer/userlist.txt
+.sonarqube
