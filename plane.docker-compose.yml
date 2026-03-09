@@ -111,6 +111,9 @@ services:
     environment:
       # --- URLs de Acesso Público ---
       WEB_URL: https://plane.gabspassarinhogarcia.uk
+      ADMIN_URL: https://admin-plane.gabspassarinhogarcia.uk
+      SPACE_URL: https://spaces-plane.gabspassarinhogarcia.uk
+      LIVE_URL: https://live-plane.gabspassarinhogarcia.uk
       CORS_ALLOWED_ORIGINS: https://plane.gabspassarinhogarcia.uk,https://admin-plane.gabspassarinhogarcia.uk,https://spaces-plane.gabspassarinhogarcia.uk
 
       # --- Configuração do MinIO (Via Túnel Cloudflare) ---
