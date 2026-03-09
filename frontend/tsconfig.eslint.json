@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "scripts/**/*.ts",
+    "vite.config.ts",
+    "eslint.config.mjs"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true
+  }
+}
