@@ -29,7 +29,7 @@ const result = await Bun.build({
   sourcemap: 'external',
   splitting: true,
   publicPath: './',
-  external: ['react', 'react-dom', 'react-router-dom', 'leaflet', 'react-leaflet'],
+  external: [],
 });
 
 if (!result.success) {
