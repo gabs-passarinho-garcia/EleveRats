@@ -22,7 +22,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using EleveRats.Services;
+// using EleveRats.Services;
 using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -61,7 +61,7 @@ builder.Services.AddOpenTelemetry()
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
-builder.Services.AddHostedService<AntiIdlenessService>();
+// builder.Services.AddHostedService<AntiIdlenessService>();
 
 var app = builder.Build();
 
