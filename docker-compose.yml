@@ -14,8 +14,6 @@
 
 # Docker Compose for EleveRats 2026
 # Infrastructure: Cloudflare Tunnels, PostgreSQL, MinIO, n8n, .NET Minimal API, and LGTM Observability
-include:
-  - plane.docker-compose.yml
 
 services:
   # Cloudflare Tunnel - The gatekeeper for Zero Trust security
@@ -470,9 +468,3 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/pgbouncer
-  rabbitmq_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt/dados/eleverats-state/data/rabbitmq
