@@ -1,25 +1,32 @@
+// <copyright file="AntiIdlenessService.cs" company="PlaceholderCompany">
+// Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// </copyright>
+
+namespace EleveRats.Services;
+
 /*
  * Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.Concurrent;
-
-namespace EleveRats.Services;
 
 /// <summary>
 /// Background service to maintain CPU and RAM usage above Oracle's 10% threshold.
@@ -28,13 +35,13 @@ namespace EleveRats.Services;
 /// </summary>
 public class AntiIdlenessService : BackgroundService
 {
-    private readonly ConcurrentDictionary<string, byte[]> _storage = new();
-    
+    private readonly ConcurrentDictionary<string, byte[]> storage = new();
+
     // Alvo: Manter ~3GB de RAM ocupados (3000 entradas de ~1MB cada)
-    private const int TargetRamEntries = 3000; 
+    private const int TargetRamEntries = 3000;
     private const int BatchDeleteSize = 500;
-    
-    private readonly string[] _loremWords = "lorem ipsum dolor sit amet consectetur adipiscing elit".Split(' ');
+
+    private readonly string[] loremWords = "lorem ipsum dolor sit amet consectetur adipiscing elit".Split(' ');
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -43,15 +50,18 @@ public class AntiIdlenessService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            try 
+            try
             {
                 // Paralelismo real: ocupa todos os núcleos da CPU ARM
-                await PerformHeavyLifting();
-                
+                await this.PerformHeavyLifting();
+
                 // Delay reduzido drasticamente para 5ms para manter a CPU aquecida
                 await Task.Delay(5, stoppingToken);
             }
-            catch (OperationCanceledException) { break; }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 // Sábio e direto: logs limpos para problemas reais
@@ -63,9 +73,9 @@ public class AntiIdlenessService : BackgroundService
     private async Task PerformHeavyLifting()
     {
         // 1. Paralelismo: Ocupa os 4 núcleos físicos da Ampere
-        await Task.Run(() => 
+        await Task.Run(() =>
         {
-            Parallel.For(0, Environment.ProcessorCount, _ => 
+            Parallel.For(0, Environment.ProcessorCount, _ =>
             {
                 // 2. Geração de Dados Aumentada: ~1MB por iteração
                 // Criar textura e peso real para a memória
@@ -73,12 +83,12 @@ public class AntiIdlenessService : BackgroundService
                 var sb = new StringBuilder();
                 for (int i = 0; i < length; i++)
                 {
-                    sb.Append(_loremWords[RandomNumberGenerator.GetInt32(_loremWords.Length)] + " ");
+                    sb.Append(this.loremWords[RandomNumberGenerator.GetInt32(this.loremWords.Length)] + " ");
                 }
 
                 var plaintext = Encoding.UTF8.GetBytes(sb.ToString());
-                var key = new byte[32]; 
-                var iv = new byte[12];  
+                var key = new byte[32];
+                var iv = new byte[12];
                 var tag = new byte[16];
                 var ciphertext = new byte[plaintext.Length];
 
@@ -93,21 +103,21 @@ public class AntiIdlenessService : BackgroundService
 
                 // 4. Alocação de Memória: Criando "gordura" para o monitor da Oracle ver
                 var entryKey = $"key_{Guid.NewGuid()}";
-                _storage.TryAdd(entryKey, ciphertext);
+                this.storage.TryAdd(entryKey, ciphertext);
             });
         });
 
         // 5. Cleanup Dinâmico: Mantém a ocupação alta sem estourar o limite de 4GB do Docker
-        if (_storage.Count >= TargetRamEntries)
+        if (this.storage.Count >= TargetRamEntries)
         {
-            var keysToDelete = _storage.Keys.Take(BatchDeleteSize).ToList();
+            var keysToDelete = this.storage.Keys.Take(BatchDeleteSize).ToList();
             foreach (var k in keysToDelete)
             {
-                _storage.TryRemove(k, out _);
+                this.storage.TryRemove(k, out _);
             }
-            
+
             // Força um yield para o sistema operacional respirar e o GC agir se necessário
-            await Task.Yield(); 
+            await Task.Yield();
         }
     }
 }

@@ -90,6 +90,11 @@ resource "random_password" "metabase_db_password" {
   special = false
 }
 
+resource "random_password" "sonar_db_password" {
+  length  = 20
+  special = false
+}
+
 # 2. Cria o Vault (Cofre) Always Free
 resource "oci_kms_vault" "eleverats_vault" {
   compartment_id = var.compartment_ocid
@@ -423,6 +428,25 @@ resource "oci_vault_secret" "metabase_db_password_secret" {
     ignore_changes = [secret_content]
   }
 }
+
+resource "oci_vault_secret" "sonar_db_password_secret" {
+  compartment_id = var.compartment_ocid
+  vault_id       = oci_kms_vault.eleverats_vault.id
+  key_id         = oci_kms_key.eleverats_master_key.id
+  secret_name    = "sonar-db-password"
+  description    = "Senha do usuario sonar_owner no PostgreSQL"
+
+  secret_content {
+    content      = base64encode(random_password.sonar_db_password.result)
+    content_type = "BASE64"
+    stage        = "CURRENT"
+  }
+
+  lifecycle {
+    ignore_changes = [secret_content]
+  }
+}
+
 
 # ==========================================
 # IAM: PERMISSÕES PARA A NAVE-MÃE LER O COFRE

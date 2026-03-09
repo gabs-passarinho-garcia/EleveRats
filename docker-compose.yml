@@ -41,6 +41,7 @@ services:
   db:
     image: postgres:18-alpine
     restart: always
+    command: ["postgres", "-c", "max_connections=60"]
     env_file:
       - /mnt/dados/eleverats-state/.env
     environment:
@@ -149,6 +150,7 @@ services:
       - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
       - QUEUE_BULL_REDIS_DB=1
       - N8N_METRICS=true
+      - NODE_OPTIONS=--max-old-space-size=1536
     deploy:
       resources:
         limits:
@@ -414,6 +416,7 @@ services:
       - MB_DB_PASS=${METABASE_DB_PASSWORD}
       - MB_DB_HOST=pgbouncer
       - MB_JETTY_PORT=3001
+      - JAVA_OPTS=-Xmx1500m
     deploy:
       resources:
         limits:
@@ -431,6 +434,42 @@ services:
       - metabase_data:/metabase-data
     depends_on:
       - pgbouncer
+    networks:
+      - eleverats-net
+
+  # SonarQube CE - The Guard of Code Quality
+  sonarqube:
+    image: sonarqube:community
+    restart: always
+    env_file:
+      - /mnt/dados/eleverats-state/.env
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://pgbouncer:5432/sonarqube_db
+      - SONAR_JDBC_USERNAME=${SONAR_DB_USER}
+      - SONAR_JDBC_PASSWORD=${SONAR_DB_PASSWORD}
+      - SONAR_WEB_JAVAOPTS=-Xmx1G
+      - SONAR_CE_JAVAOPTS=-Xmx1G
+      - SONAR_SEARCH_JAVAOPTS=-Xmx1G
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/system/status"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    depends_on:
+      pgbouncer:
+        condition: service_started
     networks:
       - eleverats-net
 
@@ -507,3 +546,21 @@ volumes:
       type: none
       o: bind
       device: /mnt/dados/eleverats-state/data/metabase
+  sonarqube_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/sonarqube/data
+  sonarqube_extensions:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/sonarqube/extensions
+  sonarqube_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/dados/eleverats-state/data/sonarqube/logs

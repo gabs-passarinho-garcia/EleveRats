@@ -119,6 +119,7 @@ GRAFANA_READER_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${
 PLANE_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 PLANE_LIVE_SERVER_SECRET_KEY=$(/root/bin/oci secrets secret-bundle get --secret-id ${plane_live_server_secret_key_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 METABASE_DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${metabase_db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+SONAR_DB_PASSWORD=$(/root/bin/oci secrets secret-bundle get --secret-id ${sonar_db_password_secret_id} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
 
 STATE_DIR="/mnt/dados/eleverats-state"
 echo "📂 Criando diretórios persistentes em $STATE_DIR e ajustando permissões..."
@@ -141,6 +142,12 @@ mkdir -p "$STATE_DIR/data/rabbitmq" && chown -R 999:999 "$STATE_DIR/data/rabbitm
 mkdir -p "$STATE_DIR/data/pgbouncer" && chown -R 70:70 "$STATE_DIR/data/pgbouncer"
 mkdir -p "$STATE_DIR/data/metabase" && chown -R 2000:2000 "$STATE_DIR/data/metabase"
 
+# Setup SonarQube persistence (UID 1000 is default for SonarQube image)
+mkdir -p "$STATE_DIR/data/sonarqube/data"
+mkdir -p "$STATE_DIR/data/sonarqube/extensions"
+mkdir -p "$STATE_DIR/data/sonarqube/logs"
+chown -R 1000:1000 "$STATE_DIR/data/sonarqube"
+
 cat <<EOF > "$STATE_DIR/.env"
 DB_USER="$DB_USER"
 DB_PASSWORD="$DB_PASSWORD"
@@ -160,6 +167,9 @@ PLANE_SECRET_KEY="$PLANE_SECRET_KEY"
 PLANE_LIVE_SERVER_SECRET_KEY="$PLANE_LIVE_SERVER_SECRET_KEY"
 RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD"
 METABASE_DB_PASSWORD="$METABASE_DB_PASSWORD"
+SONAR_DB_USER="sonar_owner"
+SONAR_DB_PASSWORD="$SONAR_DB_PASSWORD"
+# SONAR_TOKEN="" # Adicione o token gerado no painel do SonarQube CE (localhost:9000)
 EOF
 
 # Gera o userlist.txt pro pgBouncer a partir das senhas do cofre
@@ -167,6 +177,7 @@ cat <<EOF > "$STATE_DIR/data/pgbouncer/userlist.txt"
 "n8n_user" "$N8N_DB_PASSWORD"
 "plane_user" "$PLANE_DB_PASSWORD"
 "metabase_user" "$METABASE_DB_PASSWORD"
+"sonar_owner" "$SONAR_DB_PASSWORD"
 "$DB_USER" "$DB_PASSWORD"
 "grafana_reader" "$GRAFANA_READER_PASSWORD"
 EOF
