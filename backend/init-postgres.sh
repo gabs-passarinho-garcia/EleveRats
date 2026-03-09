@@ -28,6 +28,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
 	CREATE USER metabase_user WITH ENCRYPTED PASSWORD '$METABASE_DB_PASSWORD';
 	CREATE DATABASE metabase_db OWNER metabase_user;
+
+	CREATE USER sonar_owner WITH ENCRYPTED PASSWORD '$SONAR_DB_PASSWORD';
+	CREATE DATABASE sonarqube_db OWNER sonar_owner;
 EOSQL
 
 # 2. O Remédio para o Postgres 15+:
@@ -47,6 +50,12 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "metabase_db" <<-EOSQL
 	GRANT ALL ON SCHEMA public TO metabase_user;
 	ALTER SCHEMA public OWNER TO metabase_user;
+EOSQL
+
+# The Postgres 15+ remedy applied to SonarQube DB
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "sonarqube_db" <<-EOSQL
+	GRANT ALL ON SCHEMA public TO sonar_owner;
+	ALTER SCHEMA public OWNER TO sonar_owner;
 EOSQL
 # Permissionamento para o Grafana (Read-only)
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "eleverats_db" <<-EOSQL

@@ -23,6 +23,6 @@ test-coverage:
 
 # Run Sonar analysis (requires SONAR_TOKEN env var and dotnet-sonarscanner tool)
 sonar:
-    dotnet sonarscanner begin /k:"EleveRats_Backend" /o:"eleverats" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml"
+    dotnet sonarscanner begin /k:"EleveRats_Backend" /o:"eleverats" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}" /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml"
     dotnet build
     dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
