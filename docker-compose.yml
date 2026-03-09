@@ -403,7 +403,7 @@ services:
   # Metabase - Business Intelligence for the Rat-Pack
   metabase:
     image: metabase/metabase:v0.53.5
-    platform: linux/arm64
+    platform: linux/amd64
     restart: always
     env_file:
       - /mnt/dados/eleverats-state/.env
