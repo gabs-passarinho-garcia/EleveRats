@@ -129,7 +129,7 @@ chown ubuntu:ubuntu "$STATE_DIR"
 chown ubuntu:ubuntu "$STATE_DIR/data"
 
 # Ajuste de UIDs específicos para cada container
-mkdir -p "$STATE_DIR/data/postgres" && chown -R 999:999 "$STATE_DIR/data/postgres"
+mkdir -p "$STATE_DIR/data/postgres" && chown -R 70:70 "$STATE_DIR/data/postgres"
 mkdir -p "$STATE_DIR/data/redis" && chown -R 999:999 "$STATE_DIR/data/redis"
 mkdir -p "$STATE_DIR/data/n8n" && chown -R 1000:1000 "$STATE_DIR/data/n8n"
 mkdir -p "$STATE_DIR/data/grafana" && chown -R 472:472 "$STATE_DIR/data/grafana"
