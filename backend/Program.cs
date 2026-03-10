@@ -25,6 +25,8 @@
 using EleveRats.Core;
 using EleveRats.Services;
 using Npgsql;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
@@ -42,8 +44,8 @@ builder.Logging.AddJsonConsole(options =>
     options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
 });
 
-// --- 2. OpenTelemetry Tracing Configuration ---
-// Setup distributed tracing to map the entire request lifecycle and send it to Tempo.
+// --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration ---
+// Setup distributed telemetry to map the entire request lifecycle and metrics, sending it to Alloy.
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService("EleveRats.Api"))
     .WithTracing(tracing =>
@@ -52,9 +54,26 @@ builder.Services.AddOpenTelemetry()
         tracing.AddHttpClientInstrumentation(); // Traces outgoing HTTP requests (e.g., to n8n)
         tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
 
-        // Export traces to Grafana Tempo via OTLP gRPC endpoint
-        tracing.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.TempoEndpoint));
+        // Export traces to Grafana Alloy via OTLP gRPC endpoint
+        tracing.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation();
+        metrics.AddHttpClientInstrumentation();
+        metrics.AddRuntimeInstrumentation();
+
+        // Export metrics to Grafana Alloy via OTLP gRPC endpoint
+        metrics.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
     });
+
+// Also forward ASP.NET Core ILogger logs to OpenTelemetry OTLP
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeScopes = true;
+    options.IncludeFormattedMessage = true;
+    options.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
+});
 
 // Add services to the container.
 builder.Services.AddOpenApi();

@@ -256,16 +256,23 @@ services:
     networks:
       - eleverats-net
 
-  # Promtail - O Carteiro dos Logs
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
+  # Grafana Alloy - O Carteiro dos Logs (Substituto do Promtail)
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
     restart: always
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "12345:12345" # Alloy UI
     deploy:
       resources:
         limits:
@@ -300,6 +307,7 @@ services:
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
     deploy:
       resources:
         limits:

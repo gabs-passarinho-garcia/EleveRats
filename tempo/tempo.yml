@@ -20,8 +20,10 @@ distributor:
   receivers:
     otlp:
       protocols:
-        http: # Porta padrão: 4318
-        grpc: # Porta padrão: 4317 (onde a API .NET envia os traces)
+        http:
+          endpoint: 0.0.0.0:4318
+        grpc:
+          endpoint: 0.0.0.0:4317
 
 ingester:
   max_block_duration: 5m

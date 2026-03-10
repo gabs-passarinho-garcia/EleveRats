@@ -15,7 +15,7 @@ namespace EleveRats.Core;
 public static class Constants
 {
     /// <summary>
-    /// The gRPC OTLP endpoint for Grafana Tempo tracing.
+    /// The central gRPC OTLP endpoint for Grafana Alloy (Logs, Metrics, Traces).
     /// </summary>
-    public const string TempoEndpoint = "http://tempo:4317";
+    public const string AlloyOtlpEndpoint = "http://alloy:4317";
 }

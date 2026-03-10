@@ -1,0 +1,113 @@
+// Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+// -------------------------------------------------------------
+// DOCKER LOGS PIPELINE (Scraping direto do /var/run/docker.sock)
+// -------------------------------------------------------------
+
+// Configura a descoberta de containers Docker usando o socket local
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+// Aplica as mesmas regras de relabel_configs que o promtail usava
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_image"]
+    target_label  = "image"
+  }
+
+  rule {
+    source_labels = ["container"]
+    regex         = ""
+    action        = "drop"
+  }
+}
+
+// Coleta os logs dos containers encontrados e relabelados e manda pro Loki
+loki.source.docker "default" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.write.loki.receiver]
+}
+
+
+// -------------------------------------------------------------
+// OPENTELEMETRY (OTLP) PIPELINE (Metrics, Logs, Traces da API)
+// -------------------------------------------------------------
+
+// Recebe dados do protocolo OpenTelemetry gRPC e HTTP nas portas padrão
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    // Traces vão para o exportador OTLP direto pro Grafana Tempo
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    // Métricas viram formato Prometheus e vão pro exportador do Prometheus
+    metrics = [otelcol.exporter.prometheus.default.input]
+    // Logs viram formato LogQL e vão pro exportador do Loki (mesmo destino do Docker socket)
+    logs    = [otelcol.exporter.loki.default.input]
+  }
+}
+
+// Exporta Traces para o Grafana Tempo usando OTLP
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "http://tempo:4317"
+    // Tempo comumente aceita sem TLS no ambiente interno
+    tls {
+      insecure             = true
+      insecure_skip_verify = true
+    }
+  }
+}
+
+// Exportador convertendo OTel Logs para o Loki
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// Exportador convertendo OTel Metrics para formato do prometheus.remote_write
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// Envia métricas convertidas para o nosso Prometheus
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// -------------------------------------------------------------
+// LOKI DEFAULT WRITER PIPELINE
+// -------------------------------------------------------------
+
+// Envia todos os logs consolidados para o endpoint do Loki
+loki.write "loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
