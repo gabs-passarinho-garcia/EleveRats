@@ -27,3 +27,15 @@ sonar:
     dotnet sonarscanner begin /k:"EleveRats" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}" /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml"
     dotnet build
     dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+# Local environment (Core only)
+up-local:
+    docker compose -f docker-compose.local.yml up -d
+
+# Stop local environment
+down-local:
+    docker compose -f docker-compose.local.yml down
+
+# Show logs for local environment
+logs-local:
+    docker compose -f docker-compose.local.yml logs -f

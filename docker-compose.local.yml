@@ -1,0 +1,114 @@
+# Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+# Local Development Docker Compose for EleveRats 🐀
+# Optimized for local execution with limited resources.
+
+services:
+  # PostgreSQL - Main DB
+  db:
+    image: postgres:18-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: eleverats_user
+      POSTGRES_PASSWORD: eleverats_password
+      POSTGRES_DB: eleverats_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eleverats_user -d eleverats_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./local-data/postgres:/var/lib/postgresql/data
+      - ./backend/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
+    networks:
+      - eleverats-local
+
+  # pgBouncer - Connection pooling
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://eleverats_user:eleverats_password@db:5432/eleverats_db
+      - MAX_CLIENT_CONN=100
+      - DEFAULT_POOL_SIZE=10
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./local-data/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - eleverats-local
+
+  # Redis - Cache
+  redis:
+    image: redis:8-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass eleverats_redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "eleverats_redis_password", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./local-data/redis:/data
+    networks:
+      - eleverats-local
+
+  # MinIO - Object Storage (Required by API)
+  minio:
+    image: minio/minio:latest
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minio_user
+      MINIO_ROOT_PASSWORD: minio_password
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./local-data/minio:/data
+    networks:
+      - eleverats-local
+
+  # .NET Minimal API - The Domain Logic
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: always
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=pgbouncer;Database=eleverats_db;Username=eleverats_user;Password=eleverats_password
+      - ConnectionStrings__Redis=redis:6379,password=eleverats_redis_password
+      - Minio__Endpoint=minio:9000
+      - Minio__AccessKey=minio_user
+      - Minio__SecretKey=minio_password
+      - Minio__Secure=false
+      - ASPNETCORE_URLS=http://+:3000
+      - N8N_DB_PASSWORD=n8n_password
+      - PLANE_DB_PASSWORD=plane_password
+      - GRAFANA_READER_PASSWORD=grafana_password
+      - METABASE_DB_PASSWORD=metabase_password
+      - SONAR_DB_PASSWORD=sonar_password
+    ports:
+      - "3000:3000"
+      - "5432:5432" # Expose pgBouncer for local tools
+      - "9000:9000" # MinIO API
+      - "9001:9001" # MinIO Console
+    depends_on:
+      db:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - eleverats-local
+
+networks:
+  eleverats-local:
+    driver: bridge
