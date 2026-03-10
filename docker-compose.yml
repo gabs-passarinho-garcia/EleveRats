@@ -273,6 +273,7 @@ services:
       - "4317:4317" # OTLP gRPC
       - "4318:4318" # OTLP HTTP
       - "12345:12345" # Alloy UI
+      - "12347:12347" # Faro Receiver
     deploy:
       resources:
         limits:
