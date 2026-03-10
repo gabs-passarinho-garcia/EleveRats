@@ -35,6 +35,8 @@ Este documento é o farol da nossa infraestrutura. O EleveRats não é apenas um
 
 Nossa aplicação respeita as fronteiras da Clean Architecture. A regra de ouro é inquebrável: **a dependência aponta sempre para o centro**. As camadas externas conhecem as internas, mas o núcleo não faz ideia do que existe lá fora. Não acoplamos regras de negócio a infraestrutura de banco de dados ou a frameworks HTTP.
 
+Para detalhes profundos sobre cada pilar, consulte o [Manual de Arquitetura da Nave-Mãe](file:///mnt/dados/Gabriel/Projetos/EleveRats/docs/backend-architecture.md).
+
 O fluxo é sagrado: `[Presentation] -> [Application/Service] -> [Infrastructure/Repository] -> [Domain]`
 
 ### 1. The Domain Layer (O Santo dos Santos)

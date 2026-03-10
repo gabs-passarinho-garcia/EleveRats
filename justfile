@@ -39,3 +39,21 @@ down-local:
 # Show logs for local environment
 logs-local:
     docker compose -f docker-compose.local.yml logs -f
+
+# --- Database & Migrations (EF Core) ---
+
+# Create a new migration: just migration-add InitialCreate
+migration-add name:
+    dotnet ef migrations add {{name}} --project backend
+
+# Remove the last migration
+migration-remove:
+    dotnet ef migrations remove --project backend
+
+# Apply pending migrations to the database
+db-update:
+    dotnet ef database update --project backend
+
+# List all migrations
+migration-list:
+    dotnet ef migrations list --project backend
