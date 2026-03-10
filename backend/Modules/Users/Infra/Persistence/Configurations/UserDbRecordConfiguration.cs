@@ -37,6 +37,10 @@ public class UserDbRecordConfiguration : IEntityTypeConfiguration<UserDbRecord>
         builder.Property(x => x.Phone)
             .HasMaxLength(20);
 
+        builder.Property(x => x.IsMaster)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.ExternalSsoCode)
             .HasMaxLength(255);
 

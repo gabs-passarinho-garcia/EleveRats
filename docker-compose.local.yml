@@ -39,6 +39,8 @@ services:
         condition: service_healthy
     networks:
       - eleverats-local
+    ports:
+      - "5435:5432" # Expose pgBouncer for local tools
 
   # Redis - Cache
   redis:
@@ -72,6 +74,9 @@ services:
       - ./local-data/minio:/data
     networks:
       - eleverats-local
+    ports:
+      - "9000:9000" # MinIO API
+      - "9001:9001" # MinIO Console
 
   # .NET Minimal API - The Domain Logic
   api:
@@ -94,9 +99,6 @@ services:
       - SONAR_DB_PASSWORD=sonar_password
     ports:
       - "3000:3000"
-      - "5432:5432" # Expose pgBouncer for local tools
-      - "9000:9000" # MinIO API
-      - "9001:9001" # MinIO Console
     depends_on:
       db:
         condition: service_healthy

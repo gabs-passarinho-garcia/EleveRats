@@ -36,6 +36,8 @@ public class UserDbRecord
 
     public string? Phone { get; set; }
 
+    public bool IsMaster { get; set; }
+
     public string? ExternalSsoCode { get; set; }
 
     public SsoProvider? ExternalSso { get; set; }
