@@ -1,0 +1,62 @@
+// <copyright file="UserDbRecordConfiguration.cs" company="PlaceholderCompany">
+// Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// </copyright>
+
+namespace EleveRats.Modules.Users.Infra.Persistence.Configurations;
+
+using EleveRats.Modules.Users.Infra.Persistence.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+/// <summary>
+/// Entity Framework Core configuration for the User database record.
+/// Maps the C# properties to PostgreSQL specific columns and constraints.
+/// </summary>
+public class UserDbRecordConfiguration : IEntityTypeConfiguration<UserDbRecord>
+{
+    public void Configure(EntityTypeBuilder<UserDbRecord> builder)
+    {
+        // Table name definition
+        builder.ToTable("users");
+
+        // Primary Key
+        builder.HasKey(x => x.Id);
+
+        // Properties and constraints
+        builder.Property(x => x.Email)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        // Ensures no two users can register with the same email
+        builder.HasIndex(x => x.Email).IsUnique();
+
+        builder.Property(x => x.Phone)
+            .HasMaxLength(20);
+
+        builder.Property(x => x.ExternalSsoCode)
+            .HasMaxLength(255);
+
+        // Stores the Enum as an integer in the database for better performance
+        builder.Property(x => x.ExternalSso)
+            .HasConversion<int>();
+
+        // --- Audit Trails (The JSONB Magic) ---
+        builder.Property(x => x.CreatedBy)
+            .HasColumnType("jsonb")
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedBy)
+            .HasColumnType("jsonb");
+
+        builder.Property(x => x.DeletedBy)
+            .HasColumnType("jsonb");
+
+        // --- Global Query Filter ---
+        // Automatically excludes soft-deleted records from all LINQ queries
+        builder.HasQueryFilter(x => x.DeletedAt == null);
+    }
+}

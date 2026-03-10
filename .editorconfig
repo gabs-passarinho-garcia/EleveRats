@@ -40,3 +40,20 @@ dotnet_naming_symbols.interface.applicable_accessibilities = *
 
 dotnet_naming_style.begun_with_i.required_prefix = I
 dotnet_naming_style.begun_with_i.capitalization = pascal_case
+
+#### Linter & Analyzer Silencing (The Referee Whistle) ####
+
+# Disable missing XML comment warnings for publicly visible type or member (Compiler)
+dotnet_diagnostic.CS1591.severity = none
+
+# Disable "Elements should be documented" (StyleCop)
+dotnet_diagnostic.SA1600.severity = none
+
+# Disable "Enumeration items should be documented" (StyleCop)
+dotnet_diagnostic.SA1602.severity = none
+
+# Disable "The property's documentation summary text should begin with: 'Gets'" (StyleCop)
+dotnet_diagnostic.SA1623.severity = none
+
+# Disable strict file header checks (to avoid conflicts with your custom AGPL header) (StyleCop)
+dotnet_diagnostic.SA1633.severity = none
