@@ -122,7 +122,7 @@ faro.receiver "default" {
     listen_port    = 12347
     cors_allowed_origins = [
       "https://*.gabspassarinhogarcia.uk",
-      "http://localhost:*"
+      "http://localhost:*",
     ]
   }
 
