@@ -61,7 +61,6 @@ loki.source.file "auth_log_scraper" {
 
 // 2. Lendo o Journald para pegar Tailscale e serviços do host
 loki.source.journal "host_journal" {
-  format        = "json"
   max_age       = "12h"
   path          = "/run/systemd/journal"
   relabel_rules = discovery.relabel.journal_labels.rules
