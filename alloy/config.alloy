@@ -13,13 +13,11 @@ logging {
 // DOCKER LOGS PIPELINE (Scraping direto do /var/run/docker.sock)
 // -------------------------------------------------------------
 
-// Configura a descoberta de containers Docker usando o socket local
 discovery.docker "containers" {
   host             = "unix:///var/run/docker.sock"
   refresh_interval = "5s"
 }
 
-// Aplica as mesmas regras de relabel_configs que o promtail usava
 discovery.relabel "containers" {
   targets = discovery.docker.containers.targets
 
@@ -41,19 +39,57 @@ discovery.relabel "containers" {
   }
 }
 
-// Coleta os logs dos containers encontrados e relabelados e manda pro Loki
 loki.source.docker "default" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.containers.output
   forward_to = [loki.write.loki.receiver]
 }
 
+// -------------------------------------------------------------
+// HOST LOGS PIPELINE (SSH, Sudo, Tailscale via Journald)
+// -------------------------------------------------------------
+
+// 1. Lendo o auth.log para pegar os acessos SSH e Sudo
+local.file_match "auth_logs" {
+  path_targets = [{"__path__" = "/var/log/auth.log", "job" = "ssh-auth"}]
+}
+
+loki.source.file "auth_log_scraper" {
+  targets    = local.file_match.auth_logs.targets
+  forward_to = [loki.write.loki.receiver]
+}
+
+// 2. Lendo o Journald para pegar Tailscale e serviços do host
+loki.source.journal "host_journal" {
+  format        = "json"
+  max_age       = "12h"
+  path          = "/run/systemd/journal"
+  relabel_rules = discovery.relabel.journal_labels.rules
+  forward_to    = [loki.write.loki.receiver]
+}
+
+// Adicionando labels úteis do Journald para ficar filtrável no Grafana
+discovery.relabel "journal_labels" {
+  targets = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+  rule {
+    source_labels = ["__journal_syslog_identifier"]
+    target_label  = "syslog_identifier"
+  }
+  rule {
+    target_label = "job"
+    replacement  = "systemd-journal"
+  }
+}
 
 // -------------------------------------------------------------
 // OPENTELEMETRY (OTLP) PIPELINE (Metrics, Logs, Traces da API)
 // -------------------------------------------------------------
 
-// Recebe dados do protocolo OpenTelemetry gRPC e HTTP nas portas padrão
 otelcol.receiver.otlp "default" {
   grpc {
     endpoint = "0.0.0.0:4317"
@@ -63,20 +99,15 @@ otelcol.receiver.otlp "default" {
   }
 
   output {
-    // Traces vão para o exportador OTLP direto pro Grafana Tempo
     traces  = [otelcol.exporter.otlp.tempo.input]
-    // Métricas viram formato Prometheus e vão pro exportador do Prometheus
     metrics = [otelcol.exporter.prometheus.default.input]
-    // Logs viram formato LogQL e vão pro exportador do Loki (mesmo destino do Docker socket)
     logs    = [otelcol.exporter.loki.default.input]
   }
 }
 
-// Exporta Traces para o Grafana Tempo usando OTLP
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo:4317"
-    // Tempo comumente aceita sem TLS no ambiente interno
     tls {
       insecure             = true
       insecure_skip_verify = true
@@ -84,17 +115,14 @@ otelcol.exporter.otlp "tempo" {
   }
 }
 
-// Exportador convertendo OTel Logs para o Loki
 otelcol.exporter.loki "default" {
   forward_to = [loki.write.loki.receiver]
 }
 
-// Exportador convertendo OTel Metrics para formato do prometheus.remote_write
 otelcol.exporter.prometheus "default" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
-// Envia métricas convertidas para o nosso Prometheus
 prometheus.remote_write "default" {
   endpoint {
     url = "http://prometheus:9090/api/v1/write"
@@ -105,7 +133,6 @@ prometheus.remote_write "default" {
 // LOKI DEFAULT WRITER PIPELINE
 // -------------------------------------------------------------
 
-// Envia todos os logs consolidados para o endpoint do Loki
 loki.write "loki" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"

@@ -261,9 +261,14 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     restart: always
+    group_add:
+      - "4" # GID do grupo adm no host (ajuste com seu resultado)
+      - "999" # GID do grupo docker no host (ajuste com seu resultado)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - /var/log:/var/log:ro
+      - /run/systemd/journal:/run/systemd/journal:ro
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
