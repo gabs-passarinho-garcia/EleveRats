@@ -264,6 +264,7 @@ services:
     group_add:
       - "4" # GID do grupo adm no host (ajuste com seu resultado)
       - "999" # GID do grupo docker no host (ajuste com seu resultado)
+      - "989"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./alloy/config.alloy:/etc/alloy/config.alloy
