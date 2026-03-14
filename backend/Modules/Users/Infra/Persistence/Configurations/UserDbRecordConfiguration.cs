@@ -1,25 +1,35 @@
-// <copyright file="UserDbRecordConfiguration.cs" company="PlaceholderCompany">
+// <copyright file="UserDbRecordConfiguration.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
-
-namespace EleveRats.Modules.Users.Infra.Persistence.Configurations;
 
 using EleveRats.Modules.Users.Infra.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace EleveRats.Modules.Users.Infra.Persistence.Configurations;
+
 /// <summary>
 /// Entity Framework Core configuration for the User database record.
 /// Maps the C# properties to PostgreSQL specific columns and constraints.
 /// </summary>
-public class UserDbRecordConfiguration : IEntityTypeConfiguration<UserDbRecord>
+internal sealed class UserDbRecordConfiguration : IEntityTypeConfiguration<UserDbRecord>
 {
     public void Configure(EntityTypeBuilder<UserDbRecord> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         // Table name definition
         builder.ToTable("users");
 

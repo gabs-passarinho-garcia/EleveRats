@@ -1,19 +1,27 @@
-// <copyright file="UserDbRecord.cs" company="PlaceholderCompany">
+// <copyright file="UserDbRecord.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
+using System;
+using EleveRats.Core.Infra.Persistence.Models;
 
 namespace EleveRats.Modules.Users.Infra.Persistence.Models;
-
-using System;
 
 /// <summary>
 /// Supported Single Sign-On providers.
 /// </summary>
-public enum SsoProvider
+internal enum SsoProvider
 {
     None = 0,
     Google = 1,
@@ -22,10 +30,10 @@ public enum SsoProvider
 }
 
 /// <summary>
-/// Database record for the User entity. 
+/// Database record for the User entity.
 /// Anemic model meant exclusively for Entity Framework Core mapping.
 /// </summary>
-public class UserDbRecord
+internal sealed class UserDbRecord : AuditableDbRecord
 {
     /// <summary>
     /// Primary key. Generated using UUID v7 for sequential database indexing.
@@ -41,29 +49,4 @@ public class UserDbRecord
     public string? ExternalSsoCode { get; set; }
 
     public SsoProvider? ExternalSso { get; set; }
-
-    // --- Audit Trails ---
-    public DateTimeOffset CreatedAt { get; set; }
-
-    /// <summary>
-    /// JSON payload containing audit context (e.g., traceId, userId, serviceName).
-    /// </summary>
-    public string CreatedBy { get; set; } = string.Empty;
-
-    public DateTimeOffset? UpdatedAt { get; set; }
-
-    /// <summary>
-    /// JSON payload containing audit context for updates.
-    /// </summary>
-    public string? UpdatedBy { get; set; }
-
-    /// <summary>
-    /// Soft delete timestamp. Null means the record is active.
-    /// </summary>
-    public DateTimeOffset? DeletedAt { get; set; }
-
-    /// <summary>
-    /// JSON payload containing audit context for deletions.
-    /// </summary>
-    public string? DeletedBy { get; set; }
 }
