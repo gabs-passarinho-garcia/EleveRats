@@ -93,13 +93,13 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
   echo "🧙‍♂️ Conjurando as Migrations no Banco de Dados..."
   source $DEST_DIR/.env # Carrega o DB_USER e DB_PASSWORD
 
-  sudo docker exec -i -e PGPASSWORD="\$DB_PASSWORD" eleverats-db-1 psql -U "\$DB_USER" -d eleverats < /tmp/apply_migrations.sql
+  sudo docker exec -i -e PGPASSWORD="\$DB_PASSWORD" eleverats-db-1 psql -U "\$DB_USER" -d eleverats_db < /tmp/apply_migrations.sql
 
   # Limpa os rastros
   rm /tmp/apply_migrations.sql
 EOF
 
-cho "🧹 Varrendo o vestiário local..."
+echo "🧹 Varrendo o vestiário local..."
 rm /tmp/apply_migrations.sql
 
 echo "🎉 Deploy finalizado com Glória! Soli Deo Gloria!"
