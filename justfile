@@ -27,3 +27,33 @@ sonar:
     dotnet sonarscanner begin /k:"EleveRats" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}" /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml"
     dotnet build
     dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+# Local environment (Core only)
+up-local:
+    docker compose -f docker-compose.local.yml up -d
+
+# Stop local environment
+down-local:
+    docker compose -f docker-compose.local.yml down
+
+# Show logs for local environment
+logs-local:
+    docker compose -f docker-compose.local.yml logs -f
+
+# --- Database & Migrations (EF Core) ---
+
+# Create a new migration: just migration-add InitialCreate
+migration-add name:
+    dotnet ef migrations add {{name}} --project backend
+
+# Remove the last migration
+migration-remove:
+    dotnet ef migrations remove --project backend
+
+# Apply pending migrations to the database
+db-update:
+    dotnet ef database update --project backend
+
+# List all migrations
+migration-list:
+    dotnet ef migrations list --project backend

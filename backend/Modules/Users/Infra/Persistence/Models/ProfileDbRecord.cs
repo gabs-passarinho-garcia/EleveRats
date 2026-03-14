@@ -1,4 +1,4 @@
-// <copyright file="Constants.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// <copyright file="ProfileDbRecord.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,16 +14,33 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-namespace EleveRats.Core;
+using System;
+
+namespace EleveRats.Modules.Users.Infra.Persistence.Models;
 
 /// <summary>
-/// Centralized repository for application-wide constants.
-/// Soli Deo Gloria.
+/// Database record for the Profile entity, linking a User to an Organization.
 /// </summary>
-internal static class Constants
+internal sealed class ProfileDbRecord
 {
-    /// <summary>
-    /// The central gRPC OTLP endpoint for Grafana Alloy (Logs, Metrics, Traces).
-    /// </summary>
-    public const string AlloyOtlpEndpoint = "http://alloy:4317";
+    public Guid Id { get; set; }
+
+    public Guid OrganizationId { get; set; }
+
+    public Guid UserId { get; set; }
+
+    public string FullName { get; set; } = string.Empty;
+
+    public int Age { get; set; }
+
+    public Gender Gender { get; set; }
+
+    public bool IsMember { get; set; }
+
+    public ProfileType ProfileType { get; set; }
+
+    // --- Navigation Properties ---
+    public OrganizationDbRecord? Organization { get; set; }
+
+    public UserDbRecord? User { get; set; }
 }

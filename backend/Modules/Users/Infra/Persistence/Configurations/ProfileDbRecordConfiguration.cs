@@ -1,0 +1,55 @@
+// <copyright file="ProfileDbRecordConfiguration.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+// </copyright>
+
+using EleveRats.Modules.Users.Infra.Persistence.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace EleveRats.Modules.Users.Infra.Persistence.Configurations;
+
+/// <summary>
+/// Entity Framework Core configuration for the Profile database record.
+/// </summary>
+internal sealed class ProfileDbRecordConfiguration : IEntityTypeConfiguration<ProfileDbRecord>
+{
+    public void Configure(EntityTypeBuilder<ProfileDbRecord> builder)
+    {
+        builder.ToTable("profiles");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.FullName)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(x => x.ProfileType)
+            .HasConversion<int>();
+
+        // --- Relationships (Foreign Keys) ---
+
+        // Um Perfil pertence a uma Organização. Se a Org sumir, os perfis dela rodam (Cascade).
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Um Perfil pertence a um Usuário. Se o Usuário for deletado, o perfil vai junto.
+        builder.HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

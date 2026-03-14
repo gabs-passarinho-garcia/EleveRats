@@ -65,8 +65,12 @@ eleve_rats_ssh
 terraform/.terraform
 **/tfplan
 data/**
+# Local dev volumes
+local-data/
 
 **/userlist.txt
 pgbouncer/userlist.txt
 .sonarqube
 local-data/**
+**/bin/**
+**/bin**/**

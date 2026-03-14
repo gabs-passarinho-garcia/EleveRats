@@ -1,39 +1,31 @@
-// <copyright file="AntiIdlenessService.cs" company="PlaceholderCompany">
+// <copyright file="AntiIdlenessService.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
-
-namespace EleveRats.Services;
-
-/*
- * Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+
+namespace EleveRats.Services;
 
 /// <summary>
 /// Background service to maintain CPU and RAM usage above Oracle's 10% threshold.
 /// Performs parallel AES-256-GCM encryption and dynamic memory allocation.
 /// Optimized for ARM64 high-efficiency environments in 2026.
 /// </summary>
-public class AntiIdlenessService : BackgroundService
+internal sealed class AntiIdlenessService : BackgroundService
 {
     // Alvo: Manter ~3GB de RAM ocupados (3000 entradas de ~1MB cada)
     private const int TargetRamEntries = 3000;
@@ -79,18 +71,18 @@ public class AntiIdlenessService : BackgroundService
             {
                 // 2. Geração de Dados Aumentada: ~1MB por iteração
                 // Criar textura e peso real para a memória
-                var length = RandomNumberGenerator.GetInt32(10000, 20000);
+                int length = RandomNumberGenerator.GetInt32(10000, 20000);
                 var sb = new StringBuilder();
                 for (int i = 0; i < length; i++)
                 {
                     sb.Append(this.loremWords[RandomNumberGenerator.GetInt32(this.loremWords.Length)] + " ");
                 }
 
-                var plaintext = Encoding.UTF8.GetBytes(sb.ToString());
-                var key = new byte[32];
-                var iv = new byte[12];
-                var tag = new byte[16];
-                var ciphertext = new byte[plaintext.Length];
+                byte[] plaintext = Encoding.UTF8.GetBytes(sb.ToString());
+                byte[] key = new byte[32];
+                byte[] iv = new byte[12];
+                byte[] tag = new byte[16];
+                byte[] ciphertext = new byte[plaintext.Length];
 
                 RandomNumberGenerator.Fill(key);
                 RandomNumberGenerator.Fill(iv);
@@ -102,7 +94,7 @@ public class AntiIdlenessService : BackgroundService
                 }
 
                 // 4. Alocação de Memória: Criando "gordura" para o monitor da Oracle ver
-                var entryKey = $"key_{Guid.NewGuid()}";
+                string entryKey = $"key_{Guid.NewGuid()}";
                 this.storage.TryAdd(entryKey, ciphertext);
             });
         });
@@ -111,7 +103,7 @@ public class AntiIdlenessService : BackgroundService
         if (this.storage.Count >= TargetRamEntries)
         {
             var keysToDelete = this.storage.Keys.Take(BatchDeleteSize).ToList();
-            foreach (var k in keysToDelete)
+            foreach (string k in keysToDelete)
             {
                 this.storage.TryRemove(k, out _);
             }

@@ -20,5 +20,17 @@
     "along with this program.  If not, see <https://www.gnu.org/licenses/>."
     ]
    }
-  ]
+  ],
+  "sonarlint.connectedMode.project": {
+    "connectionId": "<default>",
+    "projectKey": "EleveRats"
+  },
+  "[csharp]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.formatOnSave": true
+  },
+  "csharp.format.enable": true
 }
