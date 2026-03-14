@@ -4,12 +4,12 @@
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -30,6 +30,10 @@ SSH_USER="ubuntu"
 SSH_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_oracle_nave_mae}"
 SSH_KEY_ARG="-i $SSH_KEY_PATH"
 
+# Criando SQL das migrations
+echo "📜 Forjando o Pergaminho de Migrations (SQL Idempotente)..."
+dotnet ef migrations script --project backend --idempotent -o /tmp/apply_migrations.sql
+
 echo "🛑 Desligando motores da Nave-Mãe ($SERVER_IP via Tailscale)..."
 ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$SERVER_IP "bash -s" << 'EOF' || true
   cd /mnt/dados/eleverats && sudo docker compose down || true
@@ -42,6 +46,9 @@ cd terraform
 tofu apply -auto-approve
 cd ..
 
+echo "🚀 Enviando o Pergaminho para a Nave-Mãe..."
+scp $SSH_KEY_ARG -o StrictHostKeyChecking=no /tmp/apply_migrations.sql $SSH_USER@$SERVER_IP:/tmp/apply_migrations.sql
+
 # 3. Atualização do Código e Containers
 BRANCH=${BRANCH:-main}
 DEST_DIR="/mnt/dados/eleverats"
@@ -50,7 +57,7 @@ echo "📦 Atualizando código na branch '$BRANCH' em $SERVER_IP..."
 
 ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << EOF
   set -e
-  
+
   echo "⏳ Aguardando a Nave-Mãe terminar a sequência de inicialização (cloud-init)..."
   sudo cloud-init status --wait || true
 
@@ -63,13 +70,13 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
 
   # Limpeza drástica para deploy efêmero (O Banco e Env estão seguros fora da pasta)
   sudo rm -rf $DEST_DIR
-  
+
   # Clona a branch do zero no destino
   git clone -b $BRANCH https://github.com/gabs-passarinho-garcia/EleveRats.git $DEST_DIR
-  
+
   # Injecta o ambiente de volta no código clonado para o docker-compose fazer o parser das strings
   sudo cp /mnt/dados/eleverats-state/.env $DEST_DIR/.env
-  
+
   # Garante que pgbouncer.ini está lá (já vem no git clone, mas é bom validar)
   [ -f $DEST_DIR/pgbouncer/pgbouncer.ini ] || echo "⚠️ pgbouncer.ini ausente!"
 
@@ -79,6 +86,20 @@ ssh $SSH_KEY_ARG -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "bash -s" << E
   echo "🐳 Reiniciando containers Docker..."
   sudo docker compose down || true
   sudo docker compose up -d --build
+
+  echo "⏳ Aguardando os motores do PostgreSQL aquecerem (10s)..."
+  sleep 10 # Essencial: O banco precisa estar aceitando conexões
+
+  echo "🧙‍♂️ Conjurando as Migrations no Banco de Dados..."
+  source $DEST_DIR/.env # Carrega o DB_USER e DB_PASSWORD
+
+  sudo docker exec -i -e PGPASSWORD="\$DB_PASSWORD" eleverats-db-1 psql -U "\$DB_USER" -d eleverats < /tmp/apply_migrations.sql
+
+  # Limpa os rastros
+  rm /tmp/apply_migrations.sql
 EOF
+
+cho "🧹 Varrendo o vestiário local..."
+rm /tmp/apply_migrations.sql
 
 echo "🎉 Deploy finalizado com Glória! Soli Deo Gloria!"
