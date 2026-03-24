@@ -41,7 +41,8 @@ builder.Logging.AddJsonConsole(options =>
 
 // --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration ---
 // Setup distributed telemetry to map the entire request lifecycle and metrics, sending it to Alloy.
-builder.Services.AddOpenTelemetry()
+builder
+    .Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService("EleveRats.Api"))
     .WithTracing(tracing =>
     {
@@ -90,33 +91,40 @@ app.UseStaticFiles();
 // Captures HTTP metrics (request count, duration, status codes) for Prometheus
 app.UseHttpMetrics();
 
-app.MapGet("/", async (IWebHostEnvironment env) =>
-{
-    string dotnetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-    string filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
-
-    if (!System.IO.File.Exists(filePath))
+app.MapGet(
+    "/",
+    async (IWebHostEnvironment env) =>
     {
-        return Results.NotFound("index.html not found");
-    }
+        string dotnetVersion = System
+            .Runtime
+            .InteropServices
+            .RuntimeInformation
+            .FrameworkDescription;
+        string filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
 
-    string html = await System.IO.File.ReadAllTextAsync(filePath);
-    html = html.Replace("{{dotnetVersion}}", dotnetVersion, StringComparison.Ordinal);
+        if (!System.IO.File.Exists(filePath))
+        {
+            return Results.NotFound("index.html not found");
+        }
 
-    string docsButton = env.IsDevelopment()
-        ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
+        string html = await System.IO.File.ReadAllTextAsync(filePath);
+        html = html.Replace("{{dotnetVersion}}", dotnetVersion, StringComparison.Ordinal);
+
+        string docsButton = env.IsDevelopment()
+            ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
             <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
                 <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>
                 <path d=""M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z""></path>
             </svg>
             Documentação
         </a>"
-        : string.Empty;
+            : string.Empty;
 
-    html = html.Replace("{{docsButton}}", docsButton, StringComparison.Ordinal);
+        html = html.Replace("{{docsButton}}", docsButton, StringComparison.Ordinal);
 
-    return Results.Content(html, "text/html");
-});
+        return Results.Content(html, "text/html");
+    }
+);
 
 // Exposes the /metrics endpoint for Prometheus scraping
 app.MapMetrics();
