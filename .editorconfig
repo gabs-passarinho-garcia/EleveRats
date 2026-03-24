@@ -95,6 +95,17 @@ dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA1602.severity = none
 dotnet_diagnostic.SA1623.severity = none
 dotnet_diagnostic.CS1591.severity = warning
+# SA1009: Closing parenthesis should not be preceded by a space
+dotnet_diagnostic.SA1009.severity = none
+
+# SA1111: Closing parenthesis should be on line of last parameter
+dotnet_diagnostic.SA1111.severity = none
+
+# SA1028: Code should not contain trailing whitespace (Às vezes o CSharpier deixa uns espaços que o StyleCop odeia)
+dotnet_diagnostic.SA1028.severity = none
+
+# SA1513: Closing brace should be followed by blank line (Outro que costuma brigar)
+dotnet_diagnostic.SA1513.severity = none
 
 # Estética (O CSharpier cuida disso, o compilador não precisa gritar)
 dotnet_diagnostic.SA1101.severity = none

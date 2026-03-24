@@ -42,7 +42,8 @@ internal sealed class UsersDbContextFactory : IDesignTimeDbContextFactory<UsersD
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             // Fallback for local development if the connection string is missing in appsettings
-            connectionString = "Host=localhost;Database=eleverats_dev;Username=postgres;Password=postgres";
+            connectionString =
+                "Host=localhost;Database=eleverats_dev;Username=postgres;Password=postgres";
         }
 
         // 3. Builds the DbContextOptions
