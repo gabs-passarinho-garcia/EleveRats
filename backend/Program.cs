@@ -1,28 +1,21 @@
-// <copyright file="Program.cs" company="PlaceholderCompany">
+// <copyright file="Program.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-/*
- * Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 using EleveRats.Core;
+using EleveRats.Modules.Users;
 using EleveRats.Services;
 using Npgsql;
 using OpenTelemetry.Logs;
@@ -32,7 +25,9 @@ using OpenTelemetry.Trace;
 using Prometheus;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddUsersModule(builder.Configuration);
 
 // --- 1. Logging Configuration ---
 // Clear default providers and force JSON output to console.
@@ -46,7 +41,8 @@ builder.Logging.AddJsonConsole(options =>
 
 // --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration ---
 // Setup distributed telemetry to map the entire request lifecycle and metrics, sending it to Alloy.
-builder.Services.AddOpenTelemetry()
+builder
+    .Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService("EleveRats.Api"))
     .WithTracing(tracing =>
     {
@@ -80,7 +76,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddHostedService<AntiIdlenessService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -95,33 +91,40 @@ app.UseStaticFiles();
 // Captures HTTP metrics (request count, duration, status codes) for Prometheus
 app.UseHttpMetrics();
 
-app.MapGet("/", async (IWebHostEnvironment env) =>
-{
-    var dotnetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-    var filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
-
-    if (!System.IO.File.Exists(filePath))
+app.MapGet(
+    "/",
+    async (IWebHostEnvironment env) =>
     {
-        return Results.NotFound("index.html not found");
-    }
+        string dotnetVersion = System
+            .Runtime
+            .InteropServices
+            .RuntimeInformation
+            .FrameworkDescription;
+        string filePath = Path.Combine(env.ContentRootPath, "wwwroot", "index.html");
 
-    var html = await System.IO.File.ReadAllTextAsync(filePath);
-    html = html.Replace("{{dotnetVersion}}", dotnetVersion);
+        if (!System.IO.File.Exists(filePath))
+        {
+            return Results.NotFound("index.html not found");
+        }
 
-    var docsButton = env.IsDevelopment()
-        ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
+        string html = await System.IO.File.ReadAllTextAsync(filePath);
+        html = html.Replace("{{dotnetVersion}}", dotnetVersion, StringComparison.Ordinal);
+
+        string docsButton = env.IsDevelopment()
+            ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
             <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
                 <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>
                 <path d=""M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z""></path>
             </svg>
             Documentação
         </a>"
-        : string.Empty;
+            : string.Empty;
 
-    html = html.Replace("{{docsButton}}", docsButton);
+        html = html.Replace("{{docsButton}}", docsButton, StringComparison.Ordinal);
 
-    return Results.Content(html, "text/html");
-});
+        return Results.Content(html, "text/html");
+    }
+);
 
 // Exposes the /metrics endpoint for Prometheus scraping
 app.MapMetrics();
