@@ -1,3 +1,17 @@
 [test]
 environment = "happy-dom"
 preload = ["./src/setupTests.ts"]
+# Set coverage reporter
+coverageReporter = ["text", "lcov"]
+
+# Set coverage output directory
+coverageDir = "./coverage"
+
+coverageSkipTestFiles = true
+
+coverageIgnoreSourcemaps = true
+
+coveragePathIgnorePatterns = ["scripts/**", "src/setupTests.ts"]
+
+[test.reporter]
+junit = "./test_results/junit.xml"

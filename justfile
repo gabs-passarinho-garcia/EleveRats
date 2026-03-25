@@ -20,11 +20,20 @@ test:
 
 # Run tests with coverage using the cross-platform collector
 test-coverage:
-    dotnet test --collect:"XPlat Code Coverage"
+    dotnet test --collect:"XPlat Code Coverage;Format=opencover"
 
-# Run Sonar analysis (requires SONAR_TOKEN env var and dotnet-sonarscanner tool)
+# Run Sonar analysis (requires SONAR_TOKEN env var, dotnet-sonarscanner and bun)
 sonar:
-    dotnet sonarscanner begin /k:"EleveRats" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}" /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml"
+    cd frontend && bun install && bun run test:cov
+    # Fix paths in lcov.info to be relative to the solution root
+    sed -i 's|SF:src/|SF:frontend/src/|g' frontend/coverage/lcov.info
+    dotnet test --collect:"XPlat Code Coverage;Format=opencover" --results-directory backend.tests/TestResults
+    dotnet sonarscanner begin /k:"EleveRats" \
+        /d:sonar.token="$SONAR_TOKEN" \
+        /d:sonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}" \
+        /d:sonar.cs.opencover.reportsPaths="backend.tests/TestResults/**/coverage.opencover.xml" \
+        /d:sonar.javascript.lcov.reportPaths="frontend/coverage/lcov.info" \
+        /d:sonar.exclusions="**/bin/**,**/obj/**,frontend/node_modules/**,backend/Migrations/**,backend/Services/AntiIdlenessService.cs"
     dotnet build
     dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
@@ -44,7 +53,7 @@ logs-local:
 
 # Create a new migration: just migration-add InitialCreate
 migration-add name:
-    dotnet ef migrations add {{name}} --project backend
+    dotnet ef migrations add {{ name }} --project backend
 
 # Remove the last migration
 migration-remove:

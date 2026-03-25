@@ -15,6 +15,7 @@
 // </copyright>
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -25,6 +26,7 @@ namespace EleveRats.Services;
 /// Performs parallel AES-256-GCM encryption and dynamic memory allocation.
 /// Optimized for ARM64 high-efficiency environments in 2026.
 /// </summary>
+[ExcludeFromCodeCoverage]
 internal sealed class AntiIdlenessService : BackgroundService
 {
     // Alvo: Manter ~3GB de RAM ocupados (3000 entradas de ~1MB cada)

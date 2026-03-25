@@ -74,3 +74,6 @@ pgbouncer/userlist.txt
 local-data/**
 **/bin/**
 **/bin**/**
+
+**/test_results/**
+**/coverage/**
