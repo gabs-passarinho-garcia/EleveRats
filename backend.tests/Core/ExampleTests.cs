@@ -15,8 +15,8 @@ public class ExampleTests
     public void TestInfrastructure_ShouldBeOperacional()
     {
         // Arrange
-        var expectedValue = 42;
-        var actualValue = 40 + 2;
+        int expectedValue = 42;
+        int actualValue = 40 + 2;
 
         // Act & Assert
         actualValue.Should().Be(expectedValue, "because the universe depends on it");

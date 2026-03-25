@@ -26,22 +26,22 @@ namespace EleveRats.Tests.Modules.Users.Domain.Entities;
 /// </summary>
 public class OrganizationTests
 {
-    private const string ValidOrgName = "EleveRats Team";
-    private const string ValidCreatedBy = "system_user";
+    private const string _validOrgName = "EleveRats Team";
+    private const string _validCreatedBy = "system_user";
 
     [Fact]
     public void Create_WithValidParameters_ShouldReturnActiveOrganization()
     {
         // Act
-        var organization = Organization.Create(ValidOrgName, ValidCreatedBy);
+        var organization = Organization.Create(_validOrgName, _validCreatedBy);
 
         // Assert
         organization.Should().NotBeNull();
         organization.Id.Should().NotBe(Guid.Empty);
-        organization.Name.Should().Be(ValidOrgName);
+        organization.Name.Should().Be(_validOrgName);
         organization.IsActive.Should().BeTrue();
         organization.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
-        organization.CreatedBy.Should().Be(ValidCreatedBy);
+        organization.CreatedBy.Should().Be(_validCreatedBy);
         organization.UpdatedAt.Should().BeNull();
         organization.UpdatedBy.Should().BeNull();
     }
@@ -50,10 +50,10 @@ public class OrganizationTests
     public void Create_WithNameWithSpaces_ShouldTrimName()
     {
         // Arrange
-        var nameWithSpaces = "  Trimmed Org  ";
+        string nameWithSpaces = "  Trimmed Org  ";
 
         // Act
-        var organization = Organization.Create(nameWithSpaces, ValidCreatedBy);
+        var organization = Organization.Create(nameWithSpaces, _validCreatedBy);
 
         // Assert
         organization.Name.Should().Be("Trimmed Org");
@@ -67,7 +67,7 @@ public class OrganizationTests
     public void Create_WithInvalidName_ShouldThrowArgumentException(string? invalidName)
     {
         // Act
-        Action act = () => Organization.Create(invalidName!, ValidCreatedBy);
+        Action act = () => Organization.Create(invalidName!, _validCreatedBy);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*name*");
@@ -80,7 +80,7 @@ public class OrganizationTests
     public void Create_WithEmptyCreatedBy_ShouldThrowArgumentException(string? invalidCreatedBy)
     {
         // Act
-        Action act = () => Organization.Create(ValidOrgName, invalidCreatedBy!);
+        Action act = () => Organization.Create(_validOrgName, invalidCreatedBy!);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*Creator context*");
@@ -91,27 +91,27 @@ public class OrganizationTests
     {
         // Arrange
         var id = Guid.CreateVersion7();
-        var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
-        var updatedAt = DateTimeOffset.UtcNow;
-        var updatedBy = "updater_user";
+        DateTimeOffset createdAt = DateTimeOffset.UtcNow.AddDays(-1);
+        DateTimeOffset updatedAt = DateTimeOffset.UtcNow;
+        string updatedBy = "updater_user";
 
         // Act
         var organization = Organization.Reconstitute(
             id,
-            ValidOrgName,
+            _validOrgName,
             false,
             createdAt,
-            ValidCreatedBy,
+            _validCreatedBy,
             updatedAt,
             updatedBy
         );
 
         // Assert
         organization.Id.Should().Be(id);
-        organization.Name.Should().Be(ValidOrgName);
+        organization.Name.Should().Be(_validOrgName);
         organization.IsActive.Should().BeFalse();
         organization.CreatedAt.Should().Be(createdAt);
-        organization.CreatedBy.Should().Be(ValidCreatedBy);
+        organization.CreatedBy.Should().Be(_validCreatedBy);
         organization.UpdatedAt.Should().Be(updatedAt);
         organization.UpdatedBy.Should().Be(updatedBy);
     }
@@ -120,9 +120,9 @@ public class OrganizationTests
     public void Rename_WithValidName_ShouldUpdateNameAndAuditInfo()
     {
         // Arrange
-        var organization = Organization.Create(ValidOrgName, ValidCreatedBy);
-        var newName = "New Org Name";
-        var updatedBy = "renamer_user";
+        var organization = Organization.Create(_validOrgName, _validCreatedBy);
+        string newName = "New Org Name";
+        string updatedBy = "renamer_user";
 
         // Act
         organization.Rename(newName, updatedBy);
@@ -140,8 +140,8 @@ public class OrganizationTests
     public void Deactivate_WhenActive_ShouldSetIsActiveToFalseAndSetTimestamp()
     {
         // Arrange
-        var organization = Organization.Create(ValidOrgName, ValidCreatedBy);
-        var updatedBy = "deactivator_user";
+        var organization = Organization.Create(_validOrgName, _validCreatedBy);
+        string updatedBy = "deactivator_user";
 
         // Act
         organization.Deactivate(updatedBy);
@@ -159,9 +159,9 @@ public class OrganizationTests
     public void Deactivate_WhenAlreadyInactive_ShouldBeIdempotent()
     {
         // Arrange
-        var organization = Organization.Create(ValidOrgName, ValidCreatedBy);
+        var organization = Organization.Create(_validOrgName, _validCreatedBy);
         organization.Deactivate("first_user");
-        var firstUpdate = organization.UpdatedAt;
+        DateTimeOffset? firstUpdate = organization.UpdatedAt;
 
         // Act
         organization.Deactivate("second_user");
@@ -178,7 +178,7 @@ public class OrganizationTests
     public void Rename_WithEmptyUpdatedBy_ShouldThrowArgumentException(string? invalidUpdatedBy)
     {
         // Arrange
-        var organization = Organization.Create(ValidOrgName, ValidCreatedBy);
+        var organization = Organization.Create(_validOrgName, _validCreatedBy);
 
         // Act
         Action act = () => organization.Rename("New Name", invalidUpdatedBy!);

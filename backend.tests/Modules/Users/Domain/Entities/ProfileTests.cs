@@ -29,11 +29,11 @@ public class ProfileTests
 {
     private readonly Guid _organizationId = Guid.CreateVersion7();
     private readonly Guid _userId = Guid.CreateVersion7();
-    private const string ValidFullName = "Gabriel Passarinho Garcia";
-    private const int ValidAge = 28;
-    private const Gender ValidGender = Gender.Male;
-    private const ProfileType ValidProfileType = ProfileType.Admin;
-    private const string ValidCreatedBy = "system_user";
+    private const string _validFullName = "Gabriel Passarinho Garcia";
+    private const int _validAge = 28;
+    private const Gender _validGender = Gender.Male;
+    private const ProfileType _validProfileType = ProfileType.Admin;
+    private const string _validCreatedBy = "system_user";
 
     [Fact]
     public void Create_WithValidParameters_ShouldReturnProfile()
@@ -42,11 +42,11 @@ public class ProfileTests
         var profile = Profile.Create(
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
-            ValidProfileType,
-            ValidCreatedBy
+            _validFullName,
+            _validAge,
+            _validGender,
+            _validProfileType,
+            _validCreatedBy
         );
 
         // Assert
@@ -54,13 +54,13 @@ public class ProfileTests
         profile.Id.Should().NotBe(Guid.Empty);
         profile.OrganizationId.Should().Be(_organizationId);
         profile.UserId.Should().Be(_userId);
-        profile.FullName.Should().Be(ValidFullName);
-        profile.Age.Should().Be(ValidAge);
-        profile.Gender.Should().Be(ValidGender);
-        profile.ProfileType.Should().Be(ValidProfileType);
+        profile.FullName.Should().Be(_validFullName);
+        profile.Age.Should().Be(_validAge);
+        profile.Gender.Should().Be(_validGender);
+        profile.ProfileType.Should().Be(_validProfileType);
         profile.IsMember.Should().BeTrue();
         profile.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
-        profile.CreatedBy.Should().Be(ValidCreatedBy);
+        profile.CreatedBy.Should().Be(_validCreatedBy);
         profile.UpdatedAt.Should().BeNull();
         profile.UpdatedBy.Should().BeNull();
     }
@@ -77,11 +77,11 @@ public class ProfileTests
             Profile.Create(
                 _organizationId,
                 _userId,
-                invalidName,
-                ValidAge,
-                ValidGender,
-                ValidProfileType,
-                ValidCreatedBy
+                invalidName!,
+                _validAge,
+                _validGender,
+                _validProfileType,
+                _validCreatedBy
             );
 
         // Assert
@@ -98,11 +98,11 @@ public class ProfileTests
             Profile.Create(
                 _organizationId,
                 _userId,
-                ValidFullName,
+                _validFullName,
                 invalidAge,
-                ValidGender,
-                ValidProfileType,
-                ValidCreatedBy
+                _validGender,
+                _validProfileType,
+                _validCreatedBy
             );
 
         // Assert
@@ -120,11 +120,11 @@ public class ProfileTests
             Profile.Create(
                 _organizationId,
                 _userId,
-                ValidFullName,
-                ValidAge,
-                ValidGender,
-                ValidProfileType,
-                invalidCreatedBy
+                _validFullName,
+                _validAge,
+                _validGender,
+                _validProfileType,
+                invalidCreatedBy!
             );
 
         // Assert
@@ -136,22 +136,22 @@ public class ProfileTests
     {
         // Arrange
         var id = Guid.CreateVersion7();
-        var createdAt = DateTimeOffset.UtcNow.AddHours(-1);
-        var updatedAt = DateTimeOffset.UtcNow;
-        var updatedBy = "updater_user";
+        DateTimeOffset createdAt = DateTimeOffset.UtcNow.AddHours(-1);
+        DateTimeOffset updatedAt = DateTimeOffset.UtcNow;
+        string updatedBy = "updater_user";
 
         // Act
         var profile = Profile.Reconstitute(
             id,
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
+            _validFullName,
+            _validAge,
+            _validGender,
             false,
             ProfileType.Member,
             createdAt,
-            ValidCreatedBy,
+            _validCreatedBy,
             updatedAt,
             updatedBy
         );
@@ -160,13 +160,13 @@ public class ProfileTests
         profile.Id.Should().Be(id);
         profile.OrganizationId.Should().Be(_organizationId);
         profile.UserId.Should().Be(_userId);
-        profile.FullName.Should().Be(ValidFullName);
-        profile.Age.Should().Be(ValidAge);
-        profile.Gender.Should().Be(ValidGender);
+        profile.FullName.Should().Be(_validFullName);
+        profile.Age.Should().Be(_validAge);
+        profile.Gender.Should().Be(_validGender);
         profile.IsMember.Should().BeFalse();
         profile.ProfileType.Should().Be(ProfileType.Member);
         profile.CreatedAt.Should().Be(createdAt);
-        profile.CreatedBy.Should().Be(ValidCreatedBy);
+        profile.CreatedBy.Should().Be(_validCreatedBy);
         profile.UpdatedAt.Should().Be(updatedAt);
         profile.UpdatedBy.Should().Be(updatedBy);
     }
@@ -178,17 +178,17 @@ public class ProfileTests
         var profile = Profile.Create(
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
-            ValidProfileType,
-            ValidCreatedBy
+            _validFullName,
+            _validAge,
+            _validGender,
+            _validProfileType,
+            _validCreatedBy
         );
 
-        var newName = "New Name Here  "; // With trailing spaces
-        var newAge = 30;
-        var newGender = Gender.Female;
-        var updatedBy = "new_updater";
+        string newName = "New Name Here  "; // With trailing spaces
+        int newAge = 30;
+        Gender newGender = Gender.Female;
+        string updatedBy = "new_updater";
 
         // Act
         profile.UpdateDetails(newName, newAge, newGender, updatedBy);
@@ -209,14 +209,14 @@ public class ProfileTests
         var profile = Profile.Create(
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
+            _validFullName,
+            _validAge,
+            _validGender,
             ProfileType.Member,
-            ValidCreatedBy
+            _validCreatedBy
         );
 
-        var updatedBy = "admin_updater";
+        string updatedBy = "admin_updater";
 
         // Act
         profile.ChangeAccessLevel(ProfileType.Admin, updatedBy);
@@ -234,14 +234,14 @@ public class ProfileTests
         var profile = Profile.Create(
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
+            _validFullName,
+            _validAge,
+            _validGender,
             ProfileType.Member,
-            ValidCreatedBy
+            _validCreatedBy
         );
 
-        var updatedBy = "security_officer";
+        string updatedBy = "security_officer";
 
         // Act
         profile.RevokeMembership(updatedBy);
@@ -264,15 +264,15 @@ public class ProfileTests
         var profile = Profile.Create(
             _organizationId,
             _userId,
-            ValidFullName,
-            ValidAge,
-            ValidGender,
-            ValidProfileType,
-            ValidCreatedBy
+            _validFullName,
+            _validAge,
+            _validGender,
+            _validProfileType,
+            _validCreatedBy
         );
 
         // Act
-        Action act = () => profile.UpdateDetails("New Name", 20, Gender.Female, invalidUpdatedBy);
+        Action act = () => profile.UpdateDetails("New Name", 20, Gender.Female, invalidUpdatedBy!);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*Updater context*");

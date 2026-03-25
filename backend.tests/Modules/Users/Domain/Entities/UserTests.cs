@@ -26,20 +26,20 @@ namespace EleveRats.Tests.Modules.Users.Domain.Entities;
 /// </summary>
 public class UserTests
 {
-    private const string ValidEmail = "test@eleverats.com";
-    private const string ValidPasswordHash = "hashed_password";
+    private const string _validEmail = "test@eleverats.com";
+    private const string _validPasswordHash = "hashed_password";
 
     [Fact]
     public void Create_WithValidParameters_ShouldReturnActiveUser()
     {
         // Act
-        var user = User.Create(ValidEmail, ValidPasswordHash);
+        var user = User.Create(_validEmail, _validPasswordHash);
 
         // Assert
         user.Should().NotBeNull();
         user.Id.Should().NotBe(Guid.Empty);
-        user.Email.Should().Be(ValidEmail.ToUpperInvariant());
-        user.PasswordHash.Should().Be(ValidPasswordHash);
+        user.Email.Should().Be(_validEmail.ToUpperInvariant());
+        user.PasswordHash.Should().Be(_validPasswordHash);
         user.IsActive.Should().BeTrue();
         user.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
         user.UpdatedAt.Should().BeNull();
@@ -55,7 +55,7 @@ public class UserTests
     public void Create_WithInvalidEmail_ShouldThrowArgumentException(string? invalidEmail)
     {
         // Act
-        Action act = () => User.Create(invalidEmail, ValidPasswordHash);
+        Action act = () => User.Create(invalidEmail!, _validPasswordHash);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*email*");
@@ -68,7 +68,7 @@ public class UserTests
     public void Create_WithInvalidPasswordHash_ShouldThrowArgumentException(string? invalidHash)
     {
         // Act
-        Action act = () => User.Create(ValidEmail, invalidHash);
+        Action act = () => User.Create(_validEmail, invalidHash!);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*password hash*");
@@ -79,11 +79,11 @@ public class UserTests
     {
         // Arrange
         var id = Guid.CreateVersion7();
-        var email = "persisted@test.com";
-        var hash = "old_hash";
-        var isActive = false;
-        var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
-        var updatedAt = DateTimeOffset.UtcNow;
+        string email = "persisted@test.com";
+        string hash = "old_hash";
+        bool isActive = false;
+        DateTimeOffset createdAt = DateTimeOffset.UtcNow.AddDays(-1);
+        DateTimeOffset updatedAt = DateTimeOffset.UtcNow;
 
         // Act
         var user = User.Reconstitute(id, email, hash, isActive, createdAt, updatedAt);
@@ -101,8 +101,8 @@ public class UserTests
     public void ChangePassword_WithValidHash_ShouldUpdatePasswordAndTimestamp()
     {
         // Arrange
-        var user = User.Create(ValidEmail, ValidPasswordHash);
-        var newHash = "new_secure_hash";
+        var user = User.Create(_validEmail, _validPasswordHash);
+        string newHash = "new_secure_hash";
 
         // Act
         user.ChangePassword(newHash);
@@ -120,10 +120,10 @@ public class UserTests
     public void ChangePassword_WithInvalidHash_ShouldThrowArgumentException(string? invalidHash)
     {
         // Arrange
-        var user = User.Create(ValidEmail, ValidPasswordHash);
+        var user = User.Create(_validEmail, _validPasswordHash);
 
         // Act
-        Action act = () => user.ChangePassword(invalidHash);
+        Action act = () => user.ChangePassword(invalidHash!);
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*password hash*");
@@ -133,7 +133,7 @@ public class UserTests
     public void Deactivate_WhenActive_ShouldSetIsActiveToFalseAndSetTimestamp()
     {
         // Arrange
-        var user = User.Create(ValidEmail, ValidPasswordHash);
+        var user = User.Create(_validEmail, _validPasswordHash);
 
         // Act
         user.Deactivate();
@@ -148,9 +148,9 @@ public class UserTests
     public void Deactivate_WhenAlreadyInactive_ShouldBeIdempotent()
     {
         // Arrange
-        var user = User.Create(ValidEmail, ValidPasswordHash);
+        var user = User.Create(_validEmail, _validPasswordHash);
         user.Deactivate();
-        var firstUpdate = user.UpdatedAt;
+        DateTimeOffset? firstUpdate = user.UpdatedAt;
 
         // Act
         user.Deactivate();

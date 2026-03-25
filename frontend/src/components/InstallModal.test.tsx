@@ -67,7 +67,7 @@ describe('InstallModal', () => {
   it('should show iOS-specific instructions when on iOS and not standalone', async () => {
     // Mock navigator.userAgent for iOS specifically for happy-dom
     const originalUA = window.navigator.userAgent;
-    // happy-dom usually allows direct assignment if not read-only, 
+    // happy-dom usually allows direct assignment if not read-only,
     // but the most reliable way is defineProperty on the prototype or instance
     try {
       Object.defineProperty(window.navigator, 'userAgent', {
@@ -81,16 +81,17 @@ describe('InstallModal', () => {
 
     // Mock matchMedia for standalone
     const originalMatchMedia = window.matchMedia;
-    window.matchMedia = (query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => true,
-    }) as any;
+    window.matchMedia = (query: string) =>
+      ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => true,
+      }) as any;
 
     const { findByText, queryByText } = render(<InstallModal />);
 
