@@ -13,6 +13,7 @@ jobs:
     lint:
         name: Lint (StyleCop / Dotnet Format)
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
@@ -31,6 +32,7 @@ jobs:
     sonar:
         name: SonarQube Analysis
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
@@ -70,6 +72,7 @@ jobs:
     build:
         name: Build
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
@@ -91,6 +94,7 @@ jobs:
     test:
         name: Unit Tests
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
@@ -115,6 +119,7 @@ jobs:
     coverage:
         name: Code Coverage
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout code
               uses: actions/checkout@v6
@@ -142,6 +147,7 @@ jobs:
     frontend-lint:
         name: Frontend Lint & Format
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         defaults:
             run:
                 working-directory: frontend
@@ -166,6 +172,7 @@ jobs:
     frontend-typecheck:
         name: Frontend Type Check
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         defaults:
             run:
                 working-directory: frontend
@@ -187,6 +194,7 @@ jobs:
     frontend-test:
         name: Frontend Tests
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         defaults:
             run:
                 working-directory: frontend
@@ -208,6 +216,7 @@ jobs:
     frontend-build:
         name: Frontend Build
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         defaults:
             run:
                 working-directory: frontend
@@ -241,6 +250,7 @@ jobs:
                 frontend-build,
             ]
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         if: always()
         steps:
             - name: Generate Summary
