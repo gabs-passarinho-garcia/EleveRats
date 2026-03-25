@@ -28,12 +28,13 @@ namespace EleveRats.Services;
 internal sealed class AntiIdlenessService : BackgroundService
 {
     // Alvo: Manter ~3GB de RAM ocupados (3000 entradas de ~1MB cada)
-    private const int TargetRamEntries = 3000;
-    private const int BatchDeleteSize = 500;
+    private const int _targetRamEntries = 3000;
+    private const int _batchDeleteSize = 500;
 
-    private readonly ConcurrentDictionary<string, byte[]> storage = new();
+    private readonly ConcurrentDictionary<string, byte[]> _storage = new();
 
-    private readonly string[] loremWords = "lorem ipsum dolor sit amet consectetur adipiscing elit".Split(' ');
+    private readonly string[] _loremWords =
+        "lorem ipsum dolor sit amet consectetur adipiscing elit".Split(' ');
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -67,45 +68,53 @@ internal sealed class AntiIdlenessService : BackgroundService
         // 1. Paralelismo: Ocupa os 4 núcleos físicos da Ampere
         await Task.Run(() =>
         {
-            Parallel.For(0, Environment.ProcessorCount, _ =>
-            {
-                // 2. Geração de Dados Aumentada: ~1MB por iteração
-                // Criar textura e peso real para a memória
-                int length = RandomNumberGenerator.GetInt32(10000, 20000);
-                var sb = new StringBuilder();
-                for (int i = 0; i < length; i++)
+            Parallel.For(
+                0,
+                Environment.ProcessorCount,
+                _ =>
                 {
-                    sb.Append(this.loremWords[RandomNumberGenerator.GetInt32(this.loremWords.Length)] + " ");
+                    // 2. Geração de Dados Aumentada: ~1MB por iteração
+                    // Criar textura e peso real para a memória
+                    int length = RandomNumberGenerator.GetInt32(10000, 20000);
+                    var sb = new StringBuilder();
+                    for (int i = 0; i < length; i++)
+                    {
+                        sb.Append(
+                            this._loremWords[
+                                RandomNumberGenerator.GetInt32(this._loremWords.Length)
+                            ] + " "
+                        );
+                    }
+
+                    byte[] plaintext = Encoding.UTF8.GetBytes(sb.ToString());
+                    byte[] key = new byte[32];
+                    byte[] iv = new byte[12];
+                    byte[] tag = new byte[16];
+                    byte[] ciphertext = new byte[plaintext.Length];
+
+                    RandomNumberGenerator.Fill(key);
+                    RandomNumberGenerator.Fill(iv);
+
+                    // 3. Criptografia Sem Dó: Força o JIT a trabalhar no limite do container
+                    using (var aesGcm = new AesGcm(key, tag.Length))
+                    {
+                        aesGcm.Encrypt(iv, plaintext, ciphertext, tag);
+                    }
+
+                    // 4. Alocação de Memória: Criando "gordura" para o monitor da Oracle ver
+                    string entryKey = $"key_{Guid.NewGuid()}";
+                    this._storage.TryAdd(entryKey, ciphertext);
                 }
-
-                byte[] plaintext = Encoding.UTF8.GetBytes(sb.ToString());
-                byte[] key = new byte[32];
-                byte[] iv = new byte[12];
-                byte[] tag = new byte[16];
-                byte[] ciphertext = new byte[plaintext.Length];
-
-                RandomNumberGenerator.Fill(key);
-                RandomNumberGenerator.Fill(iv);
-
-                // 3. Criptografia Sem Dó: Força o JIT a trabalhar no limite do container
-                using (var aesGcm = new AesGcm(key, tag.Length))
-                {
-                    aesGcm.Encrypt(iv, plaintext, ciphertext, tag);
-                }
-
-                // 4. Alocação de Memória: Criando "gordura" para o monitor da Oracle ver
-                string entryKey = $"key_{Guid.NewGuid()}";
-                this.storage.TryAdd(entryKey, ciphertext);
-            });
+            );
         });
 
         // 5. Cleanup Dinâmico: Mantém a ocupação alta sem estourar o limite de 4GB do Docker
-        if (this.storage.Count >= TargetRamEntries)
+        if (this._storage.Count >= _targetRamEntries)
         {
-            var keysToDelete = this.storage.Keys.Take(BatchDeleteSize).ToList();
+            var keysToDelete = this._storage.Keys.Take(_batchDeleteSize).ToList();
             foreach (string k in keysToDelete)
             {
-                this.storage.TryRemove(k, out _);
+                this._storage.TryRemove(k, out _);
             }
 
             // Força um yield para o sistema operacional respirar e o GC agir se necessário

@@ -107,6 +107,12 @@ dotnet_diagnostic.SA1028.severity = none
 # SA1513: Closing brace should be followed by blank line (Outro que costuma brigar)
 dotnet_diagnostic.SA1513.severity = none
 
+# SA1309: Field names should not begin with underscore (Conflita com o padrão de campos privados)
+dotnet_diagnostic.SA1309.severity = none
+
+# SA1306: Field names should begin with lower-case letter (Pode chiar com o underscore no início)
+dotnet_diagnostic.SA1306.severity = none
+
 # Estética (O CSharpier cuida disso, o compilador não precisa gritar)
 dotnet_diagnostic.SA1101.severity = none
 dotnet_diagnostic.IDE0005.severity = suggestion
