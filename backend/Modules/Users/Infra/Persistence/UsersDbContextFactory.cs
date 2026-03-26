@@ -15,6 +15,7 @@
 // </copyright>
 
 using System.IO;
+using EleveRats.Core.Infra.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -30,20 +31,21 @@ internal sealed class UsersDbContextFactory : IDesignTimeDbContextFactory<UsersD
     public UsersDbContext CreateDbContext(string[] args)
     {
         // 1. Reads the appsettings.json from the root of the backend folder
+        // Also includes environment variables for local/cloud overrides
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables() // Enable overrides via .env or system env
             .Build();
 
-        // 2. Extracts the connection string
-        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        // 2. Extracts the prioritized connection string
+        string? connectionString = DbConnectionStringHelper.GetConnectionString(configuration);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            // Fallback for local development if the connection string is missing in appsettings
-            connectionString =
-                "Host=localhost;Database=eleverats_dev;Username=postgres;Password=postgres";
+            // Fallback for local development if the connection string is missing everywhere
+            connectionString = "Host=localhost;Database=eleverats_dev;Username=postgres;Password=postgres";
         }
 
         // 3. Builds the DbContextOptions

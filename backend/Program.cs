@@ -28,6 +28,12 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddUsersModule(builder.Configuration);
 
+// --- 0. Infrastructure & Telemetry Parameters ---
+// OTLP Endpoint for Grafana Alloy (Logs, Traces, Metrics).
+// Can be overridden via environment variable: OpenTelemetry__AlloyOtlpEndpoint
+string otlpEndpoint = builder.Configuration["OpenTelemetry:AlloyOtlpEndpoint"] ?? Constants.AlloyOtlpEndpoint;
+var otlpUri = new Uri(otlpEndpoint);
+
 // --- 1. Logging Configuration ---
 // Clear default providers and force JSON output to console.
 // This allows Promtail to parse the logs and automatically extract the TraceId.
@@ -50,7 +56,7 @@ builder
         tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
 
         // Export traces to Grafana Alloy via OTLP gRPC endpoint
-        tracing.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
+        tracing.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
     })
     .WithMetrics(metrics =>
     {
@@ -59,7 +65,7 @@ builder
         metrics.AddRuntimeInstrumentation();
 
         // Export metrics to Grafana Alloy via OTLP gRPC endpoint
-        metrics.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
+        metrics.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
     });
 
 // Also forward ASP.NET Core ILogger logs to OpenTelemetry OTLP
@@ -67,7 +73,7 @@ builder.Logging.AddOpenTelemetry(options =>
 {
     options.IncludeScopes = true;
     options.IncludeFormattedMessage = true;
-    options.AddOtlpExporter(opt => opt.Endpoint = new Uri(Constants.AlloyOtlpEndpoint));
+    options.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
 });
 
 // Add services to the container.
