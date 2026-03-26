@@ -1,6 +1,8 @@
 # 🐀 EleveRats 2026 - Sistema de Validação Automática
 
-O **EleveRats 2026** é o motor de automação e validação de check-ins para o desafio oficial de constância e desenvolvimento do Ministério Eleve. 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=gabs-passarinho-garcia_EleveRats&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=gabs-passarinho-garcia_EleveRats)
+
+O **EleveRats 2026** é o motor de automação e validação de check-ins para o desafio oficial de constância e desenvolvimento do Ministério Eleve.
 
 Inspirado em sistemas de progressão de RPG, o projeto visa gamificar o fortalecimento do caráter através de três pilares: **Disciplina no Corpo**, **Disciplina no Espírito** e **Engajamento na Casa**. Este repositório contém a infraestrutura e a lógica de backend para validar as evidências (fotos de treinos, dados do Strava, cronômetros) submetidas pelos participantes.
 
@@ -29,20 +31,22 @@ flowchart TD
     CF == "4. Túnel Seguro" ==> CF_TUNNEL
     CF_TUNNEL -->|"5. Roteia tráfego interno"| N8N
     CF_TUNNEL -->|"Acesso Autenticado"| API
-    
+
     N8N -->|"6. Filtra/Transforma Dados (Zap/Strava)"| API
     API -->|"7. Upload do Stream da Foto"| STORAGE
     API -->|"8. Salva Dados + URL"| DB
-    
+
     %% Rotina de Backup
     N8N -.->|"9. Cron Diário: pg_dump via docker exec"| STORAGE
 ```
 
 ### 🛡️ Segurança e Autenticação
+
 * **Borda (Zero Trust):** [Cloudflare Tunnels](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (`cloudflared`) - Conecta a infraestrutura interna à rede da Cloudflare, eliminando IPs públicos e portas abertas.
 * **Identidade:** Autenticação unificada utilizando **Google SSO (OAuth 2.0)** integrada nativamente na Minimal API (e via Cloudflare Access para os painéis administrativos), livrando a aplicação do gerenciamento braçal de tokens e garantindo segurança robusta sem custos adicionais.
 
 ### 🧠 Cérebro e Processamento
+
 * **Gateway & ETL:** [n8n](https://n8n.io/) - O verdadeiro trator da operação. Atua em três frentes:
   1. **Webhook:** Recebe as mensagens da Meta API e responde rápido para evitar retentativas.
   2. **ETL do Strava:** Roda rotinas agendadas (CRON) para bater na API do Strava, extrair dados de treinos dos usuários vinculados e limpar os dados.
@@ -50,6 +54,7 @@ flowchart TD
 * **Lógica de Negócio:** Minimal API em **.NET (C#)** - Processa os JSONs limpos do n8n, baixa as imagens em RAM, interage com o Google SSO e aplica as regras rigorosas do desafio.
 
 ### 💾 Persistência
+
 * **Armazenamento de Mídia:** Object Storage (MinIO) - Guarda os comprovantes físicos pesados (fotos) e os arquivos de backup do banco de dados, mantendo o PostgreSQL leve.
 * **Banco de Dados:** PostgreSQL - Registra pontuações, usuários autenticados, pilares alcançados e URLs públicas das evidências.
 
@@ -66,6 +71,7 @@ flowchart TD
 ## 🚀 Como Executar Localmente
 
 ### Pré-requisitos
+
 * [Docker](https://www.docker.com/) e Docker Compose instalados.
 * SDK do [.NET 8.0+](https://dotnet.microsoft.com/download) (ou superior).
 * Token do Cloudflare Zero Trust e credenciais OAuth do Google.
@@ -73,20 +79,24 @@ flowchart TD
 ### Passo a Passo
 
 1. Clone o repositório:
+
    ```bash
    git clone [https://github.com/seu-usuario/eleverats.git](https://github.com/seu-usuario/eleverats.git)
    cd eleverats
    ```
 
 2. Configure as variáveis de ambiente:
+
    Crie um arquivo `.env` na raiz do projeto baseado no `.env.example` para configurar as credenciais.
 
 3. Suba a infraestrutura:
+
    ```bash
    docker-compose up -d
    ```
 
 4. Execute a Minimal API (.NET):
+
    ```bash
    dotnet run --project src/EleveRats.Api
    ```
