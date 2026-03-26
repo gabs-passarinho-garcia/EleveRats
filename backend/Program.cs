@@ -15,10 +15,10 @@
 // </copyright>
 using EleveRats.Core;
 using EleveRats.Modules.Users;
+using Grafana.OpenTelemetry;
 using Npgsql;
-using OpenTelemetry.Logs;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
 using Scalar.AspNetCore;
@@ -36,7 +36,13 @@ builder.Services.AddUsersModule(builder.Configuration);
 string otlpEndpoint =
     builder.Configuration["OpenTelemetry:AlloyOtlpEndpoint"] ?? Constants.AlloyOtlpEndpoint;
 string? otlpHeaders = builder.Configuration["OpenTelemetry:AlloyOtlpHeaders"];
-var otlpUri = new Uri(otlpEndpoint);
+
+// Bridge custom environment variables to standard OpenTelemetry ones for the Grafana SDK
+Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT", otlpEndpoint);
+if (!string.IsNullOrWhiteSpace(otlpHeaders))
+{
+    Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS", otlpHeaders);
+}
 
 // --- 1. Logging Configuration ---
 // Clear default providers and force JSON output to console.
@@ -48,58 +54,29 @@ builder.Logging.AddJsonConsole(options =>
     options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
 });
 
-// --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration ---
+// --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration (Grafana SDK) ---
 // Setup distributed telemetry to map the entire request lifecycle and metrics, sending it to Alloy.
+// The Grafana SDK automatically configures standard instrumentations and OTLP exporters.
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+    logging.UseGrafana();
+});
+
 builder
     .Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService("EleveRats.Api"))
+    .UseGrafana()
     .WithTracing(tracing =>
-    {
-        tracing.AddAspNetCoreInstrumentation(); // Traces incoming HTTP requests
-        tracing.AddHttpClientInstrumentation(); // Traces outgoing HTTP requests (e.g., to n8n)
-        tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
-
-        // Export traces to Grafana Alloy via OTLP gRPC endpoint
-        tracing.AddOtlpExporter(opt =>
-        {
-            opt.Endpoint = otlpUri;
-            if (!string.IsNullOrWhiteSpace(otlpHeaders))
-            {
-                opt.Headers = otlpHeaders;
-            }
-        });
-    })
+        tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddNpgsql()
+    )
     .WithMetrics(metrics =>
-    {
-        metrics.AddAspNetCoreInstrumentation();
-        metrics.AddHttpClientInstrumentation();
-        metrics.AddRuntimeInstrumentation();
-
-        // Export metrics to Grafana Alloy via OTLP gRPC endpoint
-        metrics.AddOtlpExporter(opt =>
-        {
-            opt.Endpoint = otlpUri;
-            if (!string.IsNullOrWhiteSpace(otlpHeaders))
-            {
-                opt.Headers = otlpHeaders;
-            }
-        });
-    });
-
-// Also forward ASP.NET Core ILogger logs to OpenTelemetry OTLP
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options.IncludeScopes = true;
-    options.IncludeFormattedMessage = true;
-    options.AddOtlpExporter(opt =>
-    {
-        opt.Endpoint = otlpUri;
-        if (!string.IsNullOrWhiteSpace(otlpHeaders))
-        {
-            opt.Headers = otlpHeaders;
-        }
-    });
-});
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter("Npgsql")
+    );
 
 // Add services to the container.
 builder.Services.AddOpenApi();
