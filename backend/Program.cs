@@ -15,7 +15,6 @@
 // </copyright>
 using EleveRats.Core;
 using EleveRats.Modules.Users;
-using EleveRats.Services;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -24,14 +23,19 @@ using OpenTelemetry.Trace;
 using Prometheus;
 using Scalar.AspNetCore;
 
+// using EleveRats.Services;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddUsersModule(builder.Configuration);
 
 // --- 0. Infrastructure & Telemetry Parameters ---
-// OTLP Endpoint for Grafana Alloy (Logs, Traces, Metrics).
-// Can be overridden via environment variable: OpenTelemetry__AlloyOtlpEndpoint
-string otlpEndpoint = builder.Configuration["OpenTelemetry:AlloyOtlpEndpoint"] ?? Constants.AlloyOtlpEndpoint;
+// OTLP Endpoint and Headers for Grafana Alloy (Logs, Traces, Metrics).
+// Can be overridden via environment variables:
+// - OpenTelemetry__AlloyOtlpEndpoint
+// - OpenTelemetry__AlloyOtlpHeaders
+string otlpEndpoint =
+    builder.Configuration["OpenTelemetry:AlloyOtlpEndpoint"] ?? Constants.AlloyOtlpEndpoint;
+string? otlpHeaders = builder.Configuration["OpenTelemetry:AlloyOtlpHeaders"];
 var otlpUri = new Uri(otlpEndpoint);
 
 // --- 1. Logging Configuration ---
@@ -56,7 +60,14 @@ builder
         tracing.AddNpgsql(); // Traces all PostgreSQL queries (command text, duration, errors)
 
         // Export traces to Grafana Alloy via OTLP gRPC endpoint
-        tracing.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
+        tracing.AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = otlpUri;
+            if (!string.IsNullOrWhiteSpace(otlpHeaders))
+            {
+                opt.Headers = otlpHeaders;
+            }
+        });
     })
     .WithMetrics(metrics =>
     {
@@ -65,7 +76,14 @@ builder
         metrics.AddRuntimeInstrumentation();
 
         // Export metrics to Grafana Alloy via OTLP gRPC endpoint
-        metrics.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
+        metrics.AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = otlpUri;
+            if (!string.IsNullOrWhiteSpace(otlpHeaders))
+            {
+                opt.Headers = otlpHeaders;
+            }
+        });
     });
 
 // Also forward ASP.NET Core ILogger logs to OpenTelemetry OTLP
@@ -73,14 +91,21 @@ builder.Logging.AddOpenTelemetry(options =>
 {
     options.IncludeScopes = true;
     options.IncludeFormattedMessage = true;
-    options.AddOtlpExporter(opt => opt.Endpoint = otlpUri);
+    options.AddOtlpExporter(opt =>
+    {
+        opt.Endpoint = otlpUri;
+        if (!string.IsNullOrWhiteSpace(otlpHeaders))
+        {
+            opt.Headers = otlpHeaders;
+        }
+    });
 });
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
-builder.Services.AddHostedService<AntiIdlenessService>();
 
+// builder.Services.AddHostedService<AntiIdlenessService>();
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
