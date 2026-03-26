@@ -14,7 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-using System;
+using EleveRats.Core.Infra.Persistence;
 using EleveRats.Modules.Users.Infra.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,22 +33,26 @@ internal static class UsersModuleExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration.</param>
     /// <returns>The updated service collection.</returns>
-    public static IServiceCollection AddUsersModule(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddUsersModule(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        // 1. Fetch the connection string from your appsettings.Development.json
-        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        // 1. Fetch the prioritized connection string (checks DATABASE_URL first)
+        string? connectionString = DbConnectionStringHelper.GetConnectionString(configuration);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("The 'DefaultConnection' string is missing or empty. Please check your appsettings.");
+            throw new InvalidOperationException(
+                "The database connection string is missing or empty. Please check your environment variables or appsettings."
+            );
         }
 
         // 2. Register the DbContext with PostgreSQL
-        services.AddDbContext<UsersDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        services.AddDbContext<UsersDbContext>(options => options.UseNpgsql(connectionString));
 
         // Future plays: Here is where we will register the IUserRepository and other services
         // services.AddScoped<IUserRepository, UserRepository>();

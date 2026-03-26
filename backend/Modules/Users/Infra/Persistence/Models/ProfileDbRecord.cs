@@ -15,6 +15,7 @@
 // </copyright>
 
 using System;
+using EleveRats.Modules.Users.Domain.Enums;
 
 namespace EleveRats.Modules.Users.Infra.Persistence.Models;
 

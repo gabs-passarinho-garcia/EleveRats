@@ -5,4 +5,7 @@
   <Folder Name="/backend/">
     <Project Path="backend/EleveRats.csproj" />
   </Folder>
+  <Folder Name="/frontend/">
+    <Project Path="frontend/EleveRats.Frontend.csproj" />
+  </Folder>
 </Solution>

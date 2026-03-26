@@ -1,4 +1,4 @@
-// <copyright file="ProfileType.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// <copyright file="Gender.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,13 +14,13 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-namespace EleveRats.Modules.Users.Infra.Persistence.Models;
+namespace EleveRats.Modules.Users.Domain.Enums;
 
 /// <summary>
-/// Defines the access level within an organization.
+/// Represents the gender of a user profile.
 /// </summary>
-internal enum ProfileType
+internal enum Gender
 {
-    Member = 1,
-    Admin = 2,
+    Male = 1,
+    Female = 2,
 }

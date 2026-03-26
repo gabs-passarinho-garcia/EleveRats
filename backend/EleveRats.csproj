@@ -14,9 +14,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -57,5 +55,4 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     <SonarProjectKey>EleveRats_Backend</SonarProjectKey>
     <SonarOrganization>eleverats</SonarOrganization>
   </PropertyGroup>
-
 </Project>
