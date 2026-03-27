@@ -17,7 +17,7 @@
 using System;
 using EleveRats.Modules.Users.Domain.Entities;
 using EleveRats.Modules.Users.Domain.Enums;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace EleveRats.Tests.Modules.Users.Domain.Entities;

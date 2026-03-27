@@ -15,8 +15,8 @@
 // </copyright>
 
 using System;
+using AwesomeAssertions;
 using EleveRats.Modules.Users.Domain.Entities;
-using FluentAssertions;
 using Xunit;
 
 namespace EleveRats.Tests.Modules.Users.Domain.Entities;

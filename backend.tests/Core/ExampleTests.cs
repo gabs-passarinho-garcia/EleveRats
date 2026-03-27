@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace EleveRats.Tests.Core;
@@ -9,7 +9,7 @@ namespace EleveRats.Tests.Core;
 public class ExampleTests
 {
     /// <summary>
-    /// Verifies that basic math still works and FluentAssertions is correctly configured.
+    /// Verifies that basic math still works and AwesomeAssertions is correctly configured.
     /// </summary>
     [Fact]
     public void TestInfrastructure_ShouldBeOperacional()
