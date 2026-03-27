@@ -86,7 +86,7 @@ builder.Services.AddHealthChecks();
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
@@ -117,7 +117,7 @@ app.MapGet(
         string html = await System.IO.File.ReadAllTextAsync(filePath);
         html = html.Replace("{{dotnetVersion}}", dotnetVersion, StringComparison.Ordinal);
 
-        string docsButton = env.IsDevelopment()
+        string docsButton = (env.IsDevelopment() || env.IsEnvironment("Local"))
             ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
             <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
                 <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>

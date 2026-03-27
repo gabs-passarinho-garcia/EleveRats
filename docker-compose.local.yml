@@ -92,6 +92,7 @@ services:
       - Minio__SecretKey=minio_password
       - Minio__Secure=false
       - ASPNETCORE_URLS=http://+:3000
+      - ASPNETCORE_ENVIRONMENT=Development
       - N8N_DB_PASSWORD=n8n_password
       - PLANE_DB_PASSWORD=plane_password
       - GRAFANA_READER_PASSWORD=grafana_password
@@ -99,6 +100,8 @@ services:
       - SONAR_DB_PASSWORD=sonar_password
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend/wwwroot:/app/wwwroot
     depends_on:
       db:
         condition: service_healthy

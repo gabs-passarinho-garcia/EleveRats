@@ -37,9 +37,13 @@ sonar:
     dotnet build
     dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
+# Build the local Docker images
+build-local:
+    docker compose -f docker-compose.local.yml build
+
 # Local environment (Core only)
 up-local:
-    docker compose -f docker-compose.local.yml up -d
+    docker compose -f docker-compose.local.yml up -d --build
 
 # Stop local environment
 down-local:
