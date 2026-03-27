@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
+
 using System;
 using EleveRats.Core.Infra.Persistence.Models;
 
@@ -41,6 +42,10 @@ internal sealed class UserDbRecord : AuditableDbRecord
     public Guid Id { get; set; }
 
     public string Email { get; set; } = string.Empty;
+
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
 
     public string? Phone { get; set; }
 
