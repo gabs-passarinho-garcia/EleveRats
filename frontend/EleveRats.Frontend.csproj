@@ -4,6 +4,7 @@
     <IsPackable>false</IsPackable>
     <CopyBuildOutputToPublishDirectory>false</CopyBuildOutputToPublishDirectory>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>$(NoWarn);CS2008</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- Include frontend source files for Sonar analysis -->
