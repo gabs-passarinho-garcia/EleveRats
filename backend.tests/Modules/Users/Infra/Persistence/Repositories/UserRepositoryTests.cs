@@ -39,7 +39,7 @@ public sealed class UserRepositoryTests : IDisposable
     public UserRepositoryTests()
     {
         // Setup In-Memory database unique for each test instance
-        var options = new DbContextOptionsBuilder<UsersDbContext>()
+        DbContextOptions<UsersDbContext> options = new DbContextOptionsBuilder<UsersDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
