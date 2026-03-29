@@ -23,7 +23,8 @@ namespace EleveRats.Modules.Users.Infra.Persistence.Configurations;
 /// <summary>
 /// Entity Framework Core configuration for the Organization database record.
 /// </summary>
-internal sealed class OrganizationDbRecordConfiguration : IEntityTypeConfiguration<OrganizationDbRecord>
+internal sealed class OrganizationDbRecordConfiguration
+    : IEntityTypeConfiguration<OrganizationDbRecord>
 {
     public void Configure(EntityTypeBuilder<OrganizationDbRecord> builder)
     {
@@ -31,9 +32,7 @@ internal sealed class OrganizationDbRecordConfiguration : IEntityTypeConfigurati
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Name)
-            .IsRequired()
-            .HasMaxLength(255);
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(255);
 
         // --- Audit Trails (JSONB) ---
         builder.Property(x => x.CreatedBy).HasColumnType("jsonb").IsRequired();

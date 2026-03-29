@@ -25,6 +25,9 @@ namespace EleveRats.Modules.Users.Domain.Entities;
 /// </summary>
 internal class Profile
 {
+    private const int _minimumCreationAge = 13;
+    private const int _majorityAge = 18;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="Profile"/> class.
     /// Private constructor to enforce factory methods.
@@ -34,7 +37,7 @@ internal class Profile
         Guid organizationId,
         Guid userId,
         string fullName,
-        int age,
+        DateOnly birthDate,
         Gender gender,
         bool isMember,
         ProfileType profileType,
@@ -48,7 +51,7 @@ internal class Profile
         OrganizationId = organizationId;
         UserId = userId;
         FullName = fullName;
-        Age = age;
+        BirthDate = birthDate;
         Gender = gender;
         IsMember = isMember;
         ProfileType = profileType;
@@ -75,7 +78,7 @@ internal class Profile
 
     public string FullName { get; private set; }
 
-    public int Age { get; private set; }
+    public DateOnly BirthDate { get; private set; }
 
     public Gender Gender { get; private set; }
 
@@ -99,7 +102,7 @@ internal class Profile
     /// <param name="organizationId">The ID of the Organization (Tenant) this profile belongs to.</param>
     /// <param name="userId">The ID of the global User this profile represents.</param>
     /// <param name="fullName">The full name of the user.</param>
-    /// <param name="age">The age of the user.</param>
+    /// <param name="birthDate">The date of birth of the user.</param>
     /// <param name="gender">The gender of the user.</param>
     /// <param name="profileType">The type of profile.</param>
     /// <param name="createdBy">The user who created the profile.</param>
@@ -108,14 +111,14 @@ internal class Profile
         Guid organizationId,
         Guid userId,
         string fullName,
-        int age,
+        DateOnly birthDate,
         Gender gender,
         ProfileType profileType,
         string createdBy
     )
     {
         ValidateFullName(fullName);
-        ValidateAge(age);
+        ValidateAge(birthDate, _minimumCreationAge);
 
         if (string.IsNullOrWhiteSpace(createdBy))
         {
@@ -127,7 +130,7 @@ internal class Profile
             organizationId: organizationId,
             userId: userId,
             fullName: fullName.Trim(),
-            age: age,
+            birthDate: birthDate,
             gender: gender,
             isMember: true, // Defaulting to active member upon creation
             profileType: profileType,
@@ -144,7 +147,7 @@ internal class Profile
     /// <param name="organizationId">The ID of the Organization (Tenant) this profile belongs to.</param>
     /// <param name="userId">The ID of the global User this profile represents.</param>
     /// <param name="fullName">The full name of the user.</param>
-    /// <param name="age">The age of the user.</param>
+    /// <param name="birthDate">The date of birth of the user.</param>
     /// <param name="gender">The gender of the user.</param>
     /// <param name="isMember">A value indicating whether the user is a member.</param>
     /// <param name="profileType">The type of profile.</param>
@@ -158,7 +161,7 @@ internal class Profile
         Guid organizationId,
         Guid userId,
         string fullName,
-        int age,
+        DateOnly birthDate,
         Gender gender,
         bool isMember,
         ProfileType profileType,
@@ -173,7 +176,7 @@ internal class Profile
             organizationId,
             userId,
             fullName,
-            age,
+            birthDate,
             gender,
             isMember,
             profileType,
@@ -187,19 +190,30 @@ internal class Profile
     // --- Domain Behaviors ---
 
     /// <summary>
+    /// Checks if the profile belongs to an adult (legal age).
+    /// </summary>
+    /// <returns>True if the user is 18 or older.</returns>
+    public bool IsAdult() => CalculateAge() >= _majorityAge;
+
+    /// <summary>
     /// Updates the personal details of the profile.
     /// </summary>
     /// <param name="newFullName">The new full name of the user.</param>
-    /// <param name="newAge">The new age of the user.</param>
+    /// <param name="newBirthDate">The new date of birth of the user.</param>
     /// <param name="newGender">The new gender of the user.</param>
     /// <param name="updatedBy">The user who updated the profile.</param>
-    public void UpdateDetails(string newFullName, int newAge, Gender newGender, string updatedBy)
+    public void UpdateDetails(
+        string newFullName,
+        DateOnly newBirthDate,
+        Gender newGender,
+        string updatedBy
+    )
     {
         ValidateFullName(newFullName);
-        ValidateAge(newAge);
+        ValidateAge(newBirthDate);
 
         FullName = newFullName.Trim();
-        Age = newAge;
+        BirthDate = newBirthDate;
         Gender = newGender;
 
         RecordUpdate(updatedBy);
@@ -242,13 +256,41 @@ internal class Profile
         }
     }
 
-    private static void ValidateAge(int age)
+    private static void ValidateAge(DateOnly birthDate, int? minAge = null)
     {
+        int age = CalculateAgeInternal(birthDate);
+
         if (age is < 0 or > 130)
         {
-            throw new ArgumentException("Age must be a valid human age.", nameof(age));
+            throw new ArgumentException(
+                "Birth date must result in a valid human age.",
+                nameof(birthDate)
+            );
+        }
+
+        if (minAge.HasValue && age < minAge.Value)
+        {
+            throw new ArgumentException(
+                $"Profile creation requires a minimum age of {minAge.Value}.",
+                nameof(birthDate)
+            );
         }
     }
+
+    private static int CalculateAgeInternal(DateOnly birthDate)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        int age = today.Year - birthDate.Year;
+
+        if (birthDate > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        return age;
+    }
+
+    private int CalculateAge() => CalculateAgeInternal(BirthDate);
 
     // --- Private Helpers ---
     private void RecordUpdate(string updatedBy)
