@@ -49,24 +49,28 @@ if (!string.IsNullOrWhiteSpace(otlpHeaders))
 }
 
 // --- 1. Infrastructure Services (Cross-Cutting) ---
-// Register distributed cache with Redis
+
+// 🏀 JOGADA DE MESTRE: Instanciar o Multiplexer uma única vez para reaproveitamento total!
+IConnectionMultiplexer redisConnection = await ConnectionMultiplexer.ConnectAsync(
+    redisConnectionString
+);
+
+// Opcional, mas muito útil: Registrar o multiplexer no DI caso você precise dele cru em algum serviço
+builder.Services.AddSingleton(redisConnection);
+
+// Register distributed cache with Redis (Usando a conexão compartilhada)
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = redisConnectionString;
+    // Usamos a factory para injetar a instância que já abrimos, evitando conexões duplicadas
+    options.ConnectionMultiplexerFactory = () => Task.FromResult(redisConnection);
     options.InstanceName = "EleveRats:";
 });
 
-// Register OpenTelemetry with Grafana SDK
-builder.Services.AddOpenTelemetry().UseGrafana();
-
-// Register Redis instrumentation for OTel
-builder.Services.ConfigureOpenTelemetryTracerProvider(
-    (sp, tracerBuilder) =>
-    {
-        IConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionString);
-        tracerBuilder.AddRedisInstrumentation(connection);
-    }
-);
+// Register OpenTelemetry with Grafana SDK e plugar o Redis
+builder
+    .Services.AddOpenTelemetry()
+    .UseGrafana()
+    .WithTracing(tracerBuilder => tracerBuilder.AddRedisInstrumentation(redisConnection));
 
 // Register Core Cache Service
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
