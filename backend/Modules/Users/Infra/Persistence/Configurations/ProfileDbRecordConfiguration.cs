@@ -38,7 +38,8 @@ internal sealed class ProfileDbRecordConfiguration : IEntityTypeConfiguration<Pr
 
         builder.Property(x => x.BirthDate).IsRequired();
 
-        builder.Property(x => x.ProfileType).HasConversion<int>();
+        builder.Property(x => x.ProfileType).HasConversion<int>().IsRequired();
+        builder.Property(x => x.Gender).HasConversion<int>().IsRequired();
 
         // --- Audit Trails (JSONB) ---
         builder.Property(x => x.CreatedBy).HasColumnType("jsonb").IsRequired();

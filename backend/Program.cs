@@ -13,29 +13,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
+
 using EleveRats.Core;
+using EleveRats.Core.Application.Interfaces;
+using EleveRats.Core.Infra.Caching;
 using EleveRats.Modules.Users;
 using Grafana.OpenTelemetry;
-using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prometheus;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
 
-// using EleveRats.Services;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddUsersModule(builder.Configuration);
 
 // --- 0. Infrastructure & Telemetry Parameters ---
 // OTLP Endpoint and Headers for Grafana Alloy (Logs, Traces, Metrics).
-// Can be overridden via environment variables:
-// - OpenTelemetry__AlloyOtlpEndpoint
-// - OpenTelemetry__AlloyOtlpHeaders
 string otlpEndpoint =
     builder.Configuration["OpenTelemetry:AlloyOtlpEndpoint"] ?? Constants.AlloyOtlpEndpoint;
 string? otlpHeaders = builder.Configuration["OpenTelemetry:AlloyOtlpHeaders"];
+
+// Redis Connection String with URI Support (Upstash, Railway, etc.)
+string rawRedisConnectionString =
+    builder.Configuration["Cache:Redis:ConnectionString"] ?? Constants.DefaultRedisConnectionString;
+string redisConnectionString = RedisConfigurationHelper.GetConnectionString(
+    rawRedisConnectionString
+);
 
 // Bridge custom environment variables to standard OpenTelemetry ones for the Grafana SDK
 Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT", otlpEndpoint);
@@ -44,60 +48,63 @@ if (!string.IsNullOrWhiteSpace(otlpHeaders))
     Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS", otlpHeaders);
 }
 
-// --- 1. Logging Configuration ---
-// Clear default providers and force JSON output to console.
-// This allows Promtail to parse the logs and automatically extract the TraceId.
-builder.Logging.ClearProviders();
-builder.Logging.AddJsonConsole(options =>
+// --- 1. Infrastructure Services (Cross-Cutting) ---
+// Register distributed cache with Redis
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.IncludeScopes = true;
-    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "EleveRats:";
 });
 
-// --- 2. OpenTelemetry Tracing, Metrics, and Logging Configuration (Grafana SDK) ---
-// Setup distributed telemetry to map the entire request lifecycle and metrics, sending it to Alloy.
-// The Grafana SDK automatically configures standard instrumentations and OTLP exporters.
-builder.Logging.AddOpenTelemetry(logging =>
-{
-    logging.IncludeFormattedMessage = true;
-    logging.IncludeScopes = true;
-    logging.UseGrafana();
-});
+// Register OpenTelemetry with Grafana SDK
+builder.Services.AddOpenTelemetry().UseGrafana();
 
-builder
-    .Services.AddOpenTelemetry()
-    .UseGrafana()
-    .WithTracing(tracing =>
-        tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddNpgsql()
-    )
-    .WithMetrics(metrics =>
-        metrics
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddMeter("Npgsql")
-    );
+// Register Redis instrumentation for OTel
+builder.Services.ConfigureOpenTelemetryTracerProvider(
+    (sp, tracerBuilder) =>
+    {
+        IConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionString);
+        tracerBuilder.AddRedisInstrumentation(connection);
+    }
+);
+
+// Register Core Cache Service
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+
+// --- 2. Module Registration ---
+// Users Module (Persistence, Repositories, Use Cases)
+builder.Services.AddUsersModule(builder.Configuration);
 
 // Add services to the container.
-builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+
+// Health Checks
 builder.Services.AddHealthChecks();
 
-// builder.Services.AddHostedService<AntiIdlenessService>();
+// OpenApi / Swagger
+builder.Services.AddOpenApi();
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
+if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseAuthorization();
+app.MapControllers();
 
-// Captures HTTP metrics (request count, duration, status codes) for Prometheus
+// Prometheus Metrics Endpoint
+app.UseMetricServer();
 app.UseHttpMetrics();
 
+// Map Module Endpoints
+// Each module should expose its own mapping extensions
+
+// Root Endpoint - Dashboard / Status
 app.MapGet(
     "/",
     async (IWebHostEnvironment env) =>
@@ -117,15 +124,16 @@ app.MapGet(
         string html = await System.IO.File.ReadAllTextAsync(filePath);
         html = html.Replace("{{dotnetVersion}}", dotnetVersion, StringComparison.Ordinal);
 
-        string docsButton = (env.IsDevelopment() || env.IsEnvironment("Local"))
-            ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
+        string docsButton =
+            (env.IsDevelopment() || env.IsEnvironment("Local"))
+                ? @"<a href=""/scalar/v1"" class=""btn-docs"" target=""_blank"">
             <svg viewBox=""0 0 24 24"" fill=""none"" stroke=""currentColor"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round"">
                 <path d=""M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z""></path>
                 <path d=""M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z""></path>
             </svg>
             Documentação
         </a>"
-            : string.Empty;
+                : string.Empty;
 
         html = html.Replace("{{docsButton}}", docsButton, StringComparison.Ordinal);
 
@@ -133,10 +141,7 @@ app.MapGet(
     }
 );
 
-// Exposes the /metrics endpoint for Prometheus scraping
-app.MapMetrics();
-
-// Health Check endpoint for Docker Compose and orchestrators
+// Map health checks
 app.MapHealthChecks("/health");
 
 await app.RunAsync();

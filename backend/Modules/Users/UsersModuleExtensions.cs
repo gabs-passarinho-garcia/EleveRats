@@ -14,11 +14,15 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
+using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Infra.Persistence;
+using EleveRats.Modules.Users.Application.Repositories;
 using EleveRats.Modules.Users.Infra.Persistence;
+using EleveRats.Modules.Users.Infra.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace EleveRats.Modules.Users;
 
@@ -54,8 +58,31 @@ internal static class UsersModuleExtensions
         // 2. Register the DbContext with PostgreSQL
         services.AddDbContext<UsersDbContext>(options => options.UseNpgsql(connectionString));
 
-        // Future plays: Here is where we will register the IUserRepository and other services
-        // services.AddScoped<IUserRepository, UserRepository>();
+        // 3. Register Module Cache Options
+        services.Configure<UsersCacheOptions>(configuration.GetSection("Cache:Modules:Users"));
+
+        // 4. Register Repositories (Decorated with Cache)
+        services.AddScoped<UserRepository>();
+        services.AddScoped<IUserRepository>(sp => new CachedUserRepository(
+            sp.GetRequiredService<UserRepository>(),
+            sp.GetRequiredService<ICacheService>(),
+            sp.GetRequiredService<IOptions<UsersCacheOptions>>()
+        ));
+
+        services.AddScoped<ProfileRepository>();
+        services.AddScoped<IProfileRepository>(sp => new CachedProfileRepository(
+            sp.GetRequiredService<ProfileRepository>(),
+            sp.GetRequiredService<ICacheService>(),
+            sp.GetRequiredService<IOptions<UsersCacheOptions>>()
+        ));
+
+        services.AddScoped<OrganizationRepository>();
+        services.AddScoped<IOrganizationRepository>(sp => new CachedOrganizationRepository(
+            sp.GetRequiredService<OrganizationRepository>(),
+            sp.GetRequiredService<ICacheService>(),
+            sp.GetRequiredService<IOptions<UsersCacheOptions>>()
+        ));
+
         return services;
     }
 }
