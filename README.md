@@ -4,102 +4,107 @@
 
 O **EleveRats 2026** é o motor de automação e validação de check-ins para o desafio oficial de constância e desenvolvimento do Ministério Eleve.
 
-Inspirado em sistemas de progressão de RPG, o projeto visa gamificar o fortalecimento do caráter através de três pilares: **Disciplina no Corpo**, **Disciplina no Espírito** e **Engajamento na Casa**. Este repositório contém a infraestrutura e a lógica de backend para validar as evidências (fotos de treinos, dados do Strava, cronômetros) submetidas pelos participantes.
+Inspirado em sistemas de progressão de RPG, o projeto visa gamificar o fortalecimento do caráter através de três pilares: **Disciplina no Corpo**, **Disciplina no Espírito** e **Engajamento na Casa**. Este repositório contém a infraestrutura e a lógica full-stack para validar as evidências submetidas pelos participantes, operando com tipagem forte e alta performance.
 
-## 🏗️ Arquitetura (A Nave Mãe)
+## 🏗️ Arquitetura (A Nuvem Distribuída)
 
-O sistema foi desenhado para ser resiliente, de baixo custo e com zero "cold starts", rodando de forma unificada e blindada em uma instância ARM (Oracle Cloud). Nenhuma porta de entrada (inbound) é exposta para a internet.
+O sistema evoluiu para uma arquitetura moderna, 100% gerenciada e Serverless/Edge. Desenhada para ser resiliente, de baixo custo e com escalabilidade instantânea, a aplicação divide responsabilidades de forma clara entre a borda (Edge) e os serviços de retaguarda.
 
 ```mermaid
 flowchart TD
-    %% Entradas de Dados e Autenticação Externas
-    WA["📱 WhatsApp do Participante"] -->|"1. Webhook (Foto/Texto)"| META("🌐 Meta API")
-    STRAVA["🚴 Strava API"] -->|"2. ETL Agendado (Rotas/Tempos)"| N8N
-    GOOGLE["🔑 Google SSO"] -.->|"3. OAuth 2.0"| API
-    META -->|"POST Request"| CF("☁️ Cloudflare Tunnels / Zero Trust")
+    %% Entradas de Dados e Cliente
+    CLIENT["📱 Cliente (Frontend - Vercel)"] -->|"Requisições"| EDGE("⚡ Cloudflare Workers (Edge)")
+    GOOGLE["🔑 Google SSO"] -.->|"OAuth 2.0"| EDGE
 
-    subgraph "Nave Mãe (Oracle Cloud - ARM)"
+    subgraph "Camada Edge & Storage (Cloudflare)"
         direction TB
-        CF_TUNNEL("🛡️ cloudflared")
-        N8N("🤖 n8n - Gateway, ETL & Cron")
-        API("⚙️ Minimal API .NET")
-        STORAGE[("📦 MinIO / Storage")]
-        DB[("🐘 PostgreSQL")]
+        EDGE("⚡ Cloudflare Workers")
+        R2[("📦 Cloudflare R2 (Storage)")]
     end
 
-    %% Fluxo Interno
-    CF == "4. Túnel Seguro" ==> CF_TUNNEL
-    CF_TUNNEL -->|"5. Roteia tráfego interno"| N8N
-    CF_TUNNEL -->|"Acesso Autenticado"| API
+    subgraph "Motor de Regras & Persistência"
+        direction TB
+        API("⚙️ Minimal API .NET (Render)")
+        UPSTASH[("⚡ Upstash (Redis Cache)")]
+        NEON[("🐘 Neon (PostgreSQL Serverless)")]
+    end
 
-    N8N -->|"6. Filtra/Transforma Dados (Zap/Strava)"| API
-    API -->|"7. Upload do Stream da Foto"| STORAGE
-    API -->|"8. Salva Dados + URL"| DB
+    subgraph "Observabilidade & Qualidade"
+        direction TB
+        GRAFANA("📊 Grafana Cloud")
+        SONAR("🔎 SonarCloud")
+    end
 
-    %% Rotina de Backup
-    N8N -.->|"9. Cron Diário: pg_dump via docker exec"| STORAGE
+    %% Fluxo de Dados
+    EDGE -->|"1. Proxy, Validação e Auth"| API
+    API -->|"2. Leitura/Escrita em Cache"| UPSTASH
+    API -->|"3. Persistência de Dados"| NEON
+    API -->|"4. Upload de Evidências (S3 API)"| R2
+
+    %% Monitoramento
+    API -.->|"Logs, Métricas e Traces"| GRAFANA
+    CLIENT -.->|"Faro Web SDK"| GRAFANA
 ```
 
-### 🛡️ Segurança e Autenticação
+### 🌐 Frontend & Borda (Edge)
 
-* **Borda (Zero Trust):** [Cloudflare Tunnels](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (`cloudflared`) - Conecta a infraestrutura interna à rede da Cloudflare, eliminando IPs públicos e portas abertas.
-* **Identidade:** Autenticação unificada utilizando **Google SSO (OAuth 2.0)** integrada nativamente na Minimal API (e via Cloudflare Access para os painéis administrativos), livrando a aplicação do gerenciamento braçal de tokens e garantindo segurança robusta sem custos adicionais.
+* **Frontend:** Hospedado na **Vercel**, construído com **Vite + Bun**. Focado em performance, componentes funcionais e tipagem estrita no TypeScript.
+* **Gateway & Interceptação:** **Cloudflare Workers** atua como o escudo e roteador na borda. Valida payloads, verifica autenticação primária e repassa as requisições limpas para o backend, reduzindo o processamento do servidor principal.
 
 ### 🧠 Cérebro e Processamento
 
-* **Gateway & ETL:** [n8n](https://n8n.io/) - O verdadeiro trator da operação. Atua em três frentes:
-  1. **Webhook:** Recebe as mensagens da Meta API e responde rápido para evitar retentativas.
-  2. **ETL do Strava:** Roda rotinas agendadas (CRON) para bater na API do Strava, extrair dados de treinos dos usuários vinculados e limpar os dados.
-  3. **Auto-Cuidado:** Executa rotinas de backup diário (`pg_dump` via `docker exec`) e envia os artefatos de segurança para o Storage.
-* **Lógica de Negócio:** Minimal API em **.NET (C#)** - Processa os JSONs limpos do n8n, baixa as imagens em RAM, interage com o Google SSO e aplica as regras rigorosas do desafio.
+* **Lógica de Negócio:** Minimal API em **.NET (C#)** hospedada no **Render**. Processa regras de negócio, aplica validações rigorosas dos pilares do desafio e gerencia a emissão de pontuações de forma totalmente *type-safe*.
 
-### 💾 Persistência
+### 💾 Persistência e Estado
 
-* **Armazenamento de Mídia:** Object Storage (MinIO) - Guarda os comprovantes físicos pesados (fotos) e os arquivos de backup do banco de dados, mantendo o PostgreSQL leve.
-* **Banco de Dados:** PostgreSQL - Registra pontuações, usuários autenticados, pilares alcançados e URLs públicas das evidências.
+* **Armazenamento de Mídia:** **Cloudflare R2** - Object Storage compatível com a API S3, utilizado para guardar os comprovantes físicos pesados (fotos de check-ins).
+* **Banco de Dados:** **Neon** (PostgreSQL Serverless) - Separa *compute* de *storage*, garantindo escalabilidade e conexões rápidas para registrar pontuações e usuários.
+* **Cache:** **Upstash** (Redis Serverless) - Mantém dados efêmeros e tokens de sessão disponíveis em milissegundos para o backend.
 
-## ⚙️ Fluxo de Dados (Fase 1)
+### 🛡️ Qualidade e Observabilidade
 
-1. **Via WhatsApp:** O participante envia a foto + texto no padrão. A Meta API aciona o túnel até o n8n.
-2. **Via Strava:** O n8n executa a rotina diária de ETL, extraindo automaticamente os treinos registrados.
-3. O n8n unifica os formatos e entrega um Payload limpo para a Minimal API (.NET).
-4. A API processa a evidência, guarda a mídia no MinIO e computa os pontos no PostgreSQL.
-5. Durante a madrugada, o n8n executa um comando de dump do banco e salva o *snapshot* no MinIO.
-
-*(Nota: O roadmap inclui a implementação de LLMs multimodais para leitura automatizada das imagens que não vierem do Strava, eliminando de vez a validação humana das evidências).*
+* **Monitoramento:** **Grafana Cloud** - Centraliza logs, traces e métricas tanto do backend (.NET) quanto do frontend.
+* **Inspeção Contínua:** **SonarCloud** - Garante que o código mantenha os padrões de qualidade e segurança antes de qualquer *merge*.
 
 ## 🚀 Como Executar Localmente
 
+Como a arquitetura é baseada em serviços gerenciados na nuvem, o setup local é leve e não exige subir bancos de dados pesados na sua máquina, bastando apontar para os serviços via `.env`.
+
 ### Pré-requisitos
 
-* [Docker](https://www.docker.com/) e Docker Compose instalados.
 * SDK do [.NET 8.0+](https://dotnet.microsoft.com/download) (ou superior).
-* Token do Cloudflare Zero Trust e credenciais OAuth do Google.
+* [Bun](https://bun.sh/) instalado para o frontend.
+* Acesso aos tokens de desenvolvimento (Neon, Upstash, R2, Grafana).
 
 ### Passo a Passo
 
-1. Clone o repositório:
+1. **Clone o repositório e configure as variáveis:**
 
    ```bash
    git clone [https://github.com/seu-usuario/eleverats.git](https://github.com/seu-usuario/eleverats.git)
    cd eleverats
    ```
 
-2. Configure as variáveis de ambiente:
+   Crie os arquivos `.env` nas pastas `backend` e `frontend` baseados nos respectivos arquivos `.env.example`.
 
-   Crie um arquivo `.env` na raiz do projeto baseado no `.env.example` para configurar as credenciais.
-
-3. Suba a infraestrutura:
+2. **Inicie o Backend (.NET):**
 
    ```bash
-   docker-compose up -d
+   cd backend
+   dotnet restore
+   dotnet run
    ```
 
-4. Execute a Minimal API (.NET):
+3. **Inicie o Frontend (Vite + Bun):**
+   Em um novo terminal:
 
    ```bash
-   dotnet run --project src/EleveRats.Api
+   cd frontend
+   bun install
+   bun run dev
    ```
+
+*(Nota: Para simular o comportamento do Cloudflare Workers localmente, consulte a documentação da ferramenta `Wrangler` inclusa nas dependências de desenvolvimento).*
 
 ## 📜 Licença
 
