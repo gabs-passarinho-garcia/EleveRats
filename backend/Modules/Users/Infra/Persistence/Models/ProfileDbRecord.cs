@@ -15,6 +15,7 @@
 // </copyright>
 
 using System;
+using EleveRats.Core.Infra.Persistence.Models;
 using EleveRats.Modules.Users.Domain.Enums;
 
 namespace EleveRats.Modules.Users.Infra.Persistence.Models;
@@ -22,7 +23,7 @@ namespace EleveRats.Modules.Users.Infra.Persistence.Models;
 /// <summary>
 /// Database record for the Profile entity, linking a User to an Organization.
 /// </summary>
-internal sealed class ProfileDbRecord
+internal sealed class ProfileDbRecord : AuditableDbRecord
 {
     public Guid Id { get; set; }
 
@@ -32,7 +33,7 @@ internal sealed class ProfileDbRecord
 
     public string FullName { get; set; } = string.Empty;
 
-    public int Age { get; set; }
+    public DateOnly BirthDate { get; set; }
 
     public Gender Gender { get; set; }
 

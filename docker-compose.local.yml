@@ -86,7 +86,7 @@ services:
     restart: always
     environment:
       - ConnectionStrings__DefaultConnection=Host=pgbouncer;Database=eleverats_db;Username=eleverats_user;Password=eleverats_password
-      - ConnectionStrings__Redis=redis:6379,password=eleverats_redis_password
+      - Cache__Redis__ConnectionString=redis:6379,password=eleverats_redis_password
       - Minio__Endpoint=minio:9000
       - Minio__AccessKey=minio_user
       - Minio__SecretKey=minio_password

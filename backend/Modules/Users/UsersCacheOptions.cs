@@ -1,4 +1,4 @@
-// <copyright file="AssemblyInfo.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// <copyright file="UsersCacheOptions.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,7 +14,15 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-using System.Runtime.CompilerServices;
+namespace EleveRats.Modules.Users;
 
-[assembly: InternalsVisibleTo("EleveRats.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+/// <summary>
+/// Configuration options for the Users module caching.
+/// </summary>
+internal sealed class UsersCacheOptions
+{
+    /// <summary>
+    /// Gets or sets the absolute expiration time in minutes for user-related cache entries.
+    /// </summary>
+    public int AbsoluteExpirationMinutes { get; set; } = 60;
+}

@@ -11,13 +11,13 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
 using System;
+using AwesomeAssertions;
 using EleveRats.Modules.Users.Domain.Entities;
 using EleveRats.Modules.Users.Domain.Enums;
-using AwesomeAssertions;
 using Xunit;
 
 namespace EleveRats.Tests.Modules.Users.Domain.Entities;
@@ -30,7 +30,7 @@ public class ProfileTests
     private readonly Guid _organizationId = Guid.CreateVersion7();
     private readonly Guid _userId = Guid.CreateVersion7();
     private const string _validFullName = "Gabriel Passarinho Garcia";
-    private const int _validAge = 28;
+    private static readonly DateOnly _validBirthDate = new(1996, 3, 29);
     private const Gender _validGender = Gender.Male;
     private const ProfileType _validProfileType = ProfileType.Admin;
     private const string _validCreatedBy = "system_user";
@@ -43,7 +43,7 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             _validProfileType,
             _validCreatedBy
@@ -55,7 +55,7 @@ public class ProfileTests
         profile.OrganizationId.Should().Be(_organizationId);
         profile.UserId.Should().Be(_userId);
         profile.FullName.Should().Be(_validFullName);
-        profile.Age.Should().Be(_validAge);
+        profile.BirthDate.Should().Be(_validBirthDate);
         profile.Gender.Should().Be(_validGender);
         profile.ProfileType.Should().Be(_validProfileType);
         profile.IsMember.Should().BeTrue();
@@ -63,6 +63,67 @@ public class ProfileTests
         profile.CreatedBy.Should().Be(_validCreatedBy);
         profile.UpdatedAt.Should().BeNull();
         profile.UpdatedBy.Should().BeNull();
+    }
+
+    [Fact]
+    public void Create_WithUnderageUser_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly underageBirthDate = today.AddYears(-12); // 12 years old
+
+        // Act
+        Action act = () =>
+            Profile.Create(
+                _organizationId,
+                _userId,
+                _validFullName,
+                underageBirthDate,
+                _validGender,
+                _validProfileType,
+                _validCreatedBy
+            );
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*minimum age of 13*");
+    }
+
+    [Fact]
+    public void IsAdult_WhenUserIsOlderThan18_ShouldReturnTrue()
+    {
+        // Arrange
+        DateOnly adultBirthDate = DateOnly.FromDateTime(DateTime.Today).AddYears(-20);
+        var profile = Profile.Create(
+            _organizationId,
+            _userId,
+            _validFullName,
+            adultBirthDate,
+            _validGender,
+            _validProfileType,
+            _validCreatedBy
+        );
+
+        // Act & Assert
+        profile.IsAdult().Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsAdult_WhenUserIsYoungerThan18_ShouldReturnFalse()
+    {
+        // Arrange
+        DateOnly minorBirthDate = DateOnly.FromDateTime(DateTime.Today).AddYears(-15);
+        var profile = Profile.Create(
+            _organizationId,
+            _userId,
+            _validFullName,
+            minorBirthDate,
+            _validGender,
+            _validProfileType,
+            _validCreatedBy
+        );
+
+        // Act & Assert
+        profile.IsAdult().Should().BeFalse();
     }
 
     [Theory]
@@ -78,7 +139,7 @@ public class ProfileTests
                 _organizationId,
                 _userId,
                 invalidName!,
-                _validAge,
+                _validBirthDate,
                 _validGender,
                 _validProfileType,
                 _validCreatedBy
@@ -86,27 +147,6 @@ public class ProfileTests
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*full name*");
-    }
-
-    [Theory]
-    [InlineData(-1)]
-    [InlineData(131)]
-    public void Create_WithInvalidAge_ShouldThrowArgumentException(int invalidAge)
-    {
-        // Act
-        Action act = () =>
-            Profile.Create(
-                _organizationId,
-                _userId,
-                _validFullName,
-                invalidAge,
-                _validGender,
-                _validProfileType,
-                _validCreatedBy
-            );
-
-        // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("*Age*");
     }
 
     [Theory]
@@ -121,7 +161,7 @@ public class ProfileTests
                 _organizationId,
                 _userId,
                 _validFullName,
-                _validAge,
+                _validBirthDate,
                 _validGender,
                 _validProfileType,
                 invalidCreatedBy!
@@ -146,7 +186,7 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             false,
             ProfileType.Member,
@@ -161,7 +201,7 @@ public class ProfileTests
         profile.OrganizationId.Should().Be(_organizationId);
         profile.UserId.Should().Be(_userId);
         profile.FullName.Should().Be(_validFullName);
-        profile.Age.Should().Be(_validAge);
+        profile.BirthDate.Should().Be(_validBirthDate);
         profile.Gender.Should().Be(_validGender);
         profile.IsMember.Should().BeFalse();
         profile.ProfileType.Should().Be(ProfileType.Member);
@@ -179,23 +219,23 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             _validProfileType,
             _validCreatedBy
         );
 
         string newName = "New Name Here  "; // With trailing spaces
-        int newAge = 30;
+        var newBirthDate = new DateOnly(1990, 1, 1);
         Gender newGender = Gender.Female;
         string updatedBy = "new_updater";
 
         // Act
-        profile.UpdateDetails(newName, newAge, newGender, updatedBy);
+        profile.UpdateDetails(newName, newBirthDate, newGender, updatedBy);
 
         // Assert
         profile.FullName.Should().Be(newName.Trim());
-        profile.Age.Should().Be(newAge);
+        profile.BirthDate.Should().Be(newBirthDate);
         profile.Gender.Should().Be(newGender);
         profile.UpdatedBy.Should().Be(updatedBy);
         profile.UpdatedAt.Should().NotBeNull();
@@ -210,7 +250,7 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             ProfileType.Member,
             _validCreatedBy
@@ -235,7 +275,7 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             ProfileType.Member,
             _validCreatedBy
@@ -265,14 +305,20 @@ public class ProfileTests
             _organizationId,
             _userId,
             _validFullName,
-            _validAge,
+            _validBirthDate,
             _validGender,
             _validProfileType,
             _validCreatedBy
         );
 
         // Act
-        Action act = () => profile.UpdateDetails("New Name", 20, Gender.Female, invalidUpdatedBy!);
+        Action act = () =>
+            profile.UpdateDetails(
+                "New Name",
+                new DateOnly(2000, 1, 1),
+                Gender.Female,
+                invalidUpdatedBy!
+            );
 
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*Updater context*");

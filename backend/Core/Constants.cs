@@ -26,4 +26,10 @@ internal static class Constants
     /// The central gRPC OTLP endpoint for Grafana Alloy (Logs, Metrics, Traces).
     /// </summary>
     public const string AlloyOtlpEndpoint = "http://alloy:4317";
+
+    /// <summary>
+    /// The default Redis connection string.
+    /// Used as fallback if not provided in configuration.
+    /// </summary>
+    public const string DefaultRedisConnectionString = "redis:6379";
 }

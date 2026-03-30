@@ -14,6 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
+using System;
 using EleveRats.Modules.Users.Infra.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,29 +28,42 @@ internal sealed class ProfileDbRecordConfiguration : IEntityTypeConfiguration<Pr
 {
     public void Configure(EntityTypeBuilder<ProfileDbRecord> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.ToTable("profiles");
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FullName)
-            .IsRequired()
-            .HasMaxLength(255);
+        builder.Property(x => x.FullName).IsRequired().HasMaxLength(255);
 
-        builder.Property(x => x.ProfileType)
-            .HasConversion<int>();
+        builder.Property(x => x.BirthDate).IsRequired();
+
+        builder.Property(x => x.ProfileType).HasConversion<int>().IsRequired();
+        builder.Property(x => x.Gender).HasConversion<int>().IsRequired();
+
+        // --- Audit Trails (JSONB) ---
+        builder.Property(x => x.CreatedBy).HasColumnType("jsonb").IsRequired();
+        builder.Property(x => x.UpdatedBy).HasColumnType("jsonb");
+        builder.Property(x => x.DeletedBy).HasColumnType("jsonb");
 
         // --- Relationships (Foreign Keys) ---
 
-        // Um Perfil pertence a uma Organização. Se a Org sumir, os perfis dela rodam (Cascade).
-        builder.HasOne(x => x.Organization)
+        // A Profile belongs to an Organization. Cascade delete for tenant cleanup.
+        builder
+            .HasOne(x => x.Organization)
             .WithMany()
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Um Perfil pertence a um Usuário. Se o Usuário for deletado, o perfil vai junto.
-        builder.HasOne(x => x.User)
+        // A Profile belongs to a User. Cascade delete for global user cleanup.
+        builder
+            .HasOne(x => x.User)
             .WithMany()
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // --- Global Query Filter ---
+        // Excludes soft-deleted profiles
+        builder.HasQueryFilter(x => x.DeletedAt == null);
     }
 }
