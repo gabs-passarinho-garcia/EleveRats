@@ -13,14 +13,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Configuração do Provedor OCI
-terraform {
-  required_providers {
-    oci = {
-      source  = "oracle/oci"
-      version = ">= 8.3.0"
-    }
-  }
-}
 
 # 1. Busca automática da imagem Ubuntu 24.04 Minimal ARM
 data "oci_core_images" "ubuntu_minimal_arm" {
