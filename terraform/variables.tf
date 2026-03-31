@@ -48,3 +48,54 @@ variable "foundry_admin_key" {
 }
 
 
+
+variable "cloudflare_api_token" {
+  description = "Token de API do Cloudflare"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_account_id" {
+  description = "Account ID do Cloudflare"
+  type        = string
+}
+
+variable "r2_access_key" {
+  description = "Access Key do R2"
+  type        = string
+  sensitive   = true
+}
+
+variable "r2_secret_key" {
+  description = "Secret Key do R2"
+  type        = string
+  sensitive   = true
+}
+
+variable "neon_api_key" {
+  description = "Token de API do Neon"
+  type        = string
+  sensitive   = true
+}
+
+variable "render_api_key" {
+  description = "Token de API do Render"
+  type        = string
+  sensitive   = true
+}
+
+variable "render_owner_id" {
+  description = "Owner ID do Render"
+  type        = string
+}
+
+variable "upstash_api_key" {
+  description = "Token de API do Upstash"
+  type        = string
+  sensitive   = true
+}
+
+variable "upstash_email" {
+  description = "Email do Upstash"
+  type        = string
+}

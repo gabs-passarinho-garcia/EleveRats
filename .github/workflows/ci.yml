@@ -280,3 +280,12 @@ jobs:
             - name: Check overall status
               if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
               run: exit 1
+
+    deploy:
+        name: Trigger Render Deploy
+        needs: report
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+            - name: Trigger Render Hook
+              run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

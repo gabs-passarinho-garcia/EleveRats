@@ -77,3 +77,4 @@ local-data/**
 
 **/test_results/**
 **/coverage/**
+terraform.tfvars

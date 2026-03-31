@@ -1,0 +1,107 @@
+name: Infra Deploy (OpenTofu)
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+jobs:
+  plan:
+    name: Tofu Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: terraform
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+      TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+      TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+      TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
+      TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
+      TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
+      TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+
+      # For older variables that might be required by main.tf
+      TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
+      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+      TF_VAR_cf_tunnel_token: ${{ secrets.CF_TUNNEL_TOKEN }}
+      TF_VAR_foundry_password: ${{ secrets.FOUNDRY_PASSWORD }}
+      TF_VAR_foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
+      TF_VAR_foundry_admin_key: ${{ secrets.FOUNDRY_ADMIN_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: latest
+
+      - name: Tofu Init
+        run: |
+          tofu init \
+            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY }}" \
+            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY }}"
+
+      - name: Tofu Plan
+        id: plan
+        run: tofu plan -no-color
+        continue-on-error: true
+
+      - name: Plan Output
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  apply:
+    name: Tofu Apply
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: terraform
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+      TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+      TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+      TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
+      TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
+      TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
+      TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+
+      # For older variables that might be required by main.tf
+      TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
+      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+      TF_VAR_cf_tunnel_token: ${{ secrets.CF_TUNNEL_TOKEN }}
+      TF_VAR_foundry_password: ${{ secrets.FOUNDRY_PASSWORD }}
+      TF_VAR_foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
+      TF_VAR_foundry_admin_key: ${{ secrets.FOUNDRY_ADMIN_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: latest
+
+      - name: Tofu Init
+        run: |
+          tofu init \
+            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY }}" \
+            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY }}"
+
+      - name: Tofu Apply
+        run: tofu apply -auto-approve
