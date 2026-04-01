@@ -68,6 +68,13 @@ jobs:
       TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
       TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
       TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
+      TF_VAR_render_redis_connection_string: ${{ secrets.RENDER_REDIS_CONNECTION_STRING }}
+      TF_VAR_render_database_url: ${{ secrets.RENDER_DATABASE_URL }}
+      TF_VAR_render_otel_exporter_otlp_endpoint: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_ENDPOINT }}
+      TF_VAR_render_otel_exporter_otlp_headers: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_HEADERS }}
+      TF_VAR_render_otel_exporter_otlp_protocol: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_PROTOCOL }}
+      TF_VAR_render_otel_resource_attributes: ${{ secrets.RENDER_OTEL_RESOURCE_ATTRIBUTES }}
+      TF_VAR_render_otel_service_name: ${{ secrets.RENDER_OTEL_SERVICE_NAME }}
       TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
       TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
 

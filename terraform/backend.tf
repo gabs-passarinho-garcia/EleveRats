@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket                      = "eleverats-infra-state"
+    bucket                      = "eleverats-state"
     key                         = "production/terraform.tfstate"
     region                      = "auto"
     skip_credentials_validation = true

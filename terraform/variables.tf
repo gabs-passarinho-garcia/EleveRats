@@ -63,3 +63,43 @@ variable "upstash_email" {
   description = "Email do Upstash"
   type        = string
 }
+
+# --- Render Environment Variables ---
+
+variable "render_redis_connection_string" {
+  description = "String de conexão do Redis para o Render"
+  type        = string
+  sensitive   = true
+}
+
+variable "render_database_url" {
+  description = "URL do Banco de Dados para o Render"
+  type        = string
+  sensitive   = true
+}
+
+variable "render_otel_exporter_otlp_endpoint" {
+  description = "Endpoint do OTEL Exporter para o Render"
+  type        = string
+}
+
+variable "render_otel_exporter_otlp_headers" {
+  description = "Headers do OTEL Exporter para o Render"
+  type        = string
+  sensitive   = true
+}
+
+variable "render_otel_exporter_otlp_protocol" {
+  description = "Protocolo do OTEL Exporter para o Render"
+  type        = string
+}
+
+variable "render_otel_resource_attributes" {
+  description = "Atributos de recurso do OTEL para o Render"
+  type        = string
+}
+
+variable "render_otel_service_name" {
+  description = "Nome do serviço OTEL para o Render"
+  type        = string
+}
