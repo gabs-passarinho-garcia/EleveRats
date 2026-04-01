@@ -7,6 +7,8 @@
 [![Neon](https://img.shields.io/badge/Powered%20By-Neon%20Postgres-00E599?style=flat-square&logo=neon)](https://neon.tech/)
 [![Frontend](https://img.shields.io/badge/Frontend-Vite%20%2B%20Bun-fbf0df?style=flat-square&logo=bun)](https://bun.sh/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI Pipeline](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/ci.yml)
+[![Nave-Mãe (Infra & Deploy)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/infra-deploy.yml/badge.svg?branch=main)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/infra-deploy.yml)
 
 O **EleveRats 2026** é o motor de automação e validação de check-ins para o desafio oficial de constância e desenvolvimento do **Ministério Eleve**.
 
