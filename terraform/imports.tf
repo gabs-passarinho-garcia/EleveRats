@@ -4,7 +4,7 @@ import {
 }
 
 import {
-  to = render_service.api
+  to = render_web_service.api
   id = "srv-d72o8gp4tr6s738h2l6g"
 }
 
