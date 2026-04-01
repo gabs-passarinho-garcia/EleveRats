@@ -1,0 +1,28 @@
+# Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
+# Copie este arquivo para 'terraform.tfvars' e preencha com seus dados reais.
+# O arquivo 'terraform.tfvars' não deve ser commitado no repositório.
+
+# --- CLOUDFLARE ---
+# Token com permissão para R2 e DNS
+cloudflare_api_token  = "cole_seu_token_aqui"
+# Account ID (pode ser encontrado no dashboard ou na URL da conta)
+cloudflare_account_id = "cole_seu_account_id_aqui"
+
+# --- R2 ACCESS KEYS (S3 Compatible) ---
+# Gerados no Cloudflare Dash > R2 > Manage R2 API Tokens
+r2_access_key = "cole_sua_access_key_aqui"
+r2_secret_key = "cole_sua_secret_key_aqui"
+
+# --- NEON (PostgreSQL Serverless) ---
+# API Key gerada no console do Neon
+neon_api_key = "cole_sua_api_key_aqui"
+
+# --- RENDER (Hosting) ---
+# API Key e Owner ID (encontrados em Account Settings)
+render_api_key  = "cole_sua_api_key_aqui"
+render_owner_id = "cole_seu_owner_id_aqui"
+
+# --- UPSTASH (Redis) ---
+# API Key e Email da conta
+upstash_api_key = "cole_sua_api_key_aqui"
+upstash_email   = "seu_email@exemplo.com"
