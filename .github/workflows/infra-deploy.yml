@@ -1,96 +1,141 @@
-name: Infra Deploy (OpenTofu)
+name: Production Lifecycle (Nave-Mãe)
 
 on:
+    workflow_run:
+        workflows: ["CI"]
+        branches: [main]
+        types: [completed]
     pull_request:
-        paths:
-            - "terraform/**"
-    push:
-        branches:
-            - main
         paths:
             - "terraform/**"
     workflow_dispatch:
 
 jobs:
-  plan:
-    name: Tofu Plan
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
-    defaults:
-      run:
-        working-directory: terraform
-    env:
-      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
-      TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
-      TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-      TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
-      TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
-      TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
-      TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+    plan:
+        name: Tofu Plan
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+        defaults:
+            run:
+                working-directory: terraform
+        env:
+            TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+            TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+            TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+            TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
+            TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
+            TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
+            TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
 
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v6
-        with:
-          tofu_version: latest
+            - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2
+              with:
+                  tofu_version: latest
 
-      - name: Tofu Init
-        run: |
-          tofu init \
-            -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
-            -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
+            - name: Tofu Init
+              run: |
+                  tofu init \
+                    -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
+                    -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
+                    -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
 
-      - name: Tofu Plan
-        id: plan
-        run: tofu plan -no-color
-        continue-on-error: true
+            - name: Tofu Plan
+              id: plan
+              run: tofu plan -no-color
+              continue-on-error: true
 
-      - name: Plan Output
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
+            - name: Plan Output
+              if: steps.plan.outcome == 'failure'
+              run: exit 1
 
-  apply:
-    name: Tofu Apply
-    runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_ACCOUNT_ID != ''
-    defaults:
-      run:
-        working-directory: terraform
-    env:
-      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
-      TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
-      TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
-      TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
-      TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
-      TF_VAR_render_redis_connection_string: ${{ secrets.RENDER_REDIS_CONNECTION_STRING }}
-      TF_VAR_render_database_url: ${{ secrets.RENDER_DATABASE_URL }}
-      TF_VAR_render_otel_exporter_otlp_endpoint: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_ENDPOINT }}
-      TF_VAR_render_otel_exporter_otlp_headers: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_HEADERS }}
-      TF_VAR_render_otel_exporter_otlp_protocol: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_PROTOCOL }}
-      TF_VAR_render_otel_resource_attributes: ${{ secrets.RENDER_OTEL_RESOURCE_ATTRIBUTES }}
-      TF_VAR_render_otel_service_name: ${{ secrets.RENDER_OTEL_SERVICE_NAME }}
-      TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
-      TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+    apply:
+        name: Tofu Apply (Infra Check)
+        runs-on: ubuntu-latest
+        if: |
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+            github.event_name == 'workflow_dispatch'
+        defaults:
+            run:
+                working-directory: terraform
+        env:
+            TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+            TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+            TF_VAR_neon_api_key: ${{ secrets.NEON_API_KEY }}
+            TF_VAR_render_api_key: ${{ secrets.RENDER_API_KEY }}
+            TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
+            TF_VAR_render_redis_connection_string: ${{ secrets.RENDER_REDIS_CONNECTION_STRING }}
+            TF_VAR_render_database_url: ${{ secrets.RENDER_DATABASE_URL }}
+            TF_VAR_render_otel_exporter_otlp_endpoint: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_ENDPOINT }}
+            TF_VAR_render_otel_exporter_otlp_headers: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_HEADERS }}
+            TF_VAR_render_otel_exporter_otlp_protocol: ${{ secrets.RENDER_OTEL_EXPORTER_OTLP_PROTOCOL }}
+            TF_VAR_render_otel_resource_attributes: ${{ secrets.RENDER_OTEL_RESOURCE_ATTRIBUTES }}
+            TF_VAR_render_otel_service_name: ${{ secrets.RENDER_OTEL_SERVICE_NAME }}
+            TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
+            TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
 
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v6
-        with:
-          tofu_version: latest
+            - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2
+              with:
+                  tofu_version: latest
 
-      - name: Tofu Init
-        run: |
-          tofu init \
-            -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
-            -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
+            - name: Tofu Init
+              run: |
+                  tofu init \
+                    -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
+                    -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
+                    -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
 
-      - name: Tofu Apply
-        run: tofu apply -auto-approve
+            - name: Tofu Apply
+              run: tofu apply -auto-approve
+
+    migrate:
+        name: EF Core Migration
+        needs: apply
+        runs-on: ubuntu-latest
+        if: |
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+            github.event_name == 'workflow_dispatch'
+        env:
+            DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+              with:
+                  dotnet-version: "10.0.x"
+
+            - name: Install Just
+              uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3
+
+            - name: Install EF Tool
+              run: dotnet tool restore
+
+            - name: Update Database
+              run: just db-update
+              env:
+                  DOTNET_ENVIRONMENT: Production
+                  # O EF Core no Program.cs/justfile vai buscar a Connection String
+                  ConnectionStrings__DefaultConnection: ${{ env.DATABASE_URL }}
+
+    deploy:
+        name: Trigger Render Deploy
+        needs: migrate
+        runs-on: ubuntu-latest
+        if: |
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+            github.event_name == 'workflow_dispatch'
+        env:
+            RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        steps:
+            - name: Trigger Render Hook
+              if: env.RENDER_DEPLOY_HOOK_URL != ''
+              run: curl -fsX POST "${RENDER_DEPLOY_HOOK_URL}"
