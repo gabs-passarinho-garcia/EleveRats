@@ -15,7 +15,7 @@ jobs:
   plan:
     name: Tofu Plan
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
     defaults:
       run:
         working-directory: terraform
@@ -49,9 +49,9 @@ jobs:
       - name: Tofu Init
         run: |
           tofu init \
-            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY }}" \
-            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY }}"
+            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'dummy' }}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY || 'dummy' }}" \
+            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY || 'dummy' }}"
 
       - name: Tofu Plan
         id: plan
@@ -65,7 +65,7 @@ jobs:
   apply:
     name: Tofu Apply
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_ACCOUNT_ID != ''
     defaults:
       run:
         working-directory: terraform
@@ -99,9 +99,9 @@ jobs:
       - name: Tofu Init
         run: |
           tofu init \
-            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY }}" \
-            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY }}"
+            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'dummy' }}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY || 'dummy' }}" \
+            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY || 'dummy' }}"
 
       - name: Tofu Apply
         run: tofu apply -auto-approve
