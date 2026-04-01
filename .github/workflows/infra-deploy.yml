@@ -1,15 +1,15 @@
 name: Infra Deploy (OpenTofu)
 
 on:
-  pull_request:
-    paths:
-      - 'terraform/**'
-  push:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
-  workflow_dispatch:
+    pull_request:
+        paths:
+            - "terraform/**"
+    push:
+        branches:
+            - main
+        paths:
+            - "terraform/**"
+    workflow_dispatch:
 
 jobs:
   plan:
@@ -30,28 +30,19 @@ jobs:
       TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
       TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
 
-      # For older variables that might be required by main.tf
-      TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
-      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
-      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
-      TF_VAR_cf_tunnel_token: ${{ secrets.CF_TUNNEL_TOKEN }}
-      TF_VAR_foundry_password: ${{ secrets.FOUNDRY_PASSWORD }}
-      TF_VAR_foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
-      TF_VAR_foundry_admin_key: ${{ secrets.FOUNDRY_ADMIN_KEY }}
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: opentofu/setup-opentofu@v1
+      - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v6
         with:
           tofu_version: latest
 
       - name: Tofu Init
         run: |
           tofu init \
-            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'dummy' }}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY || 'dummy' }}" \
-            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY || 'dummy' }}"
+            -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
+            -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
 
       - name: Tofu Plan
         id: plan
@@ -80,28 +71,19 @@ jobs:
       TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
       TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
 
-      # For older variables that might be required by main.tf
-      TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
-      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
-      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
-      TF_VAR_cf_tunnel_token: ${{ secrets.CF_TUNNEL_TOKEN }}
-      TF_VAR_foundry_password: ${{ secrets.FOUNDRY_PASSWORD }}
-      TF_VAR_foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
-      TF_VAR_foundry_admin_key: ${{ secrets.FOUNDRY_ADMIN_KEY }}
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: opentofu/setup-opentofu@v1
+      - uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v6
         with:
           tofu_version: latest
 
       - name: Tofu Init
         run: |
           tofu init \
-            -backend-config="endpoint=https://${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'dummy' }}.r2.cloudflarestorage.com" \
-            -backend-config="access_key=${{ secrets.R2_ACCESS_KEY || 'dummy' }}" \
-            -backend-config="secret_key=${{ secrets.R2_SECRET_KEY || 'dummy' }}"
+            -backend-config="endpoint=https://${TF_VAR_cloudflare_account_id:-dummy}.r2.cloudflarestorage.com" \
+            -backend-config="access_key=${TF_VAR_r2_access_key:-dummy}" \
+            -backend-config="secret_key=${TF_VAR_r2_secret_key:-dummy}"
 
       - name: Tofu Apply
         run: tofu apply -auto-approve
