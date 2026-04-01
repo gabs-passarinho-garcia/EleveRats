@@ -112,8 +112,8 @@ resource "render_web_service" "api" {
   root_directory = ""
   runtime_source = {
     docker = {
-      auto_deploy            = true
-      auto_deploy_trigger    = "commit"
+      auto_deploy            = false
+      auto_deploy_trigger    = "off"
       branch                 = "main"
       build_filter           = null
       context                = "."
@@ -129,6 +129,9 @@ resource "render_web_service" "api" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = [env_vars]
+    ignore_changes  = [
+      env_vars,
+      runtime_source
+    ]
   }
 }
