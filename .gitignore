@@ -53,21 +53,27 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
-*.tfvars
-*.env
-*.tfstate
-*.tfstate.backup
-*.tfplan
-*.tfplan.backup
-*.tfoutput
-*.private.pem
-eleve_rats_ssh
-terraform/.terraform
+# Secrets and Sensitive Files
+**/*.tfvars
+**/*.tfvars.json
+**/*.env
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfplan
+**/*.tfplan.backup
+**/*.tfoutput
+**/*.private.pem
+**/eleve_rats_ssh
+**/eleve_rats_ssh.pub
+
+# Terraform
+**/.terraform/
 **/tfplan
 data/**
 # Local dev volumes
 local-data/
 
+# Project Specifics
 **/userlist.txt
 pgbouncer/userlist.txt
 .sonarqube
