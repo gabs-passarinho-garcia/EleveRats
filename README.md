@@ -9,6 +9,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
 [![CI Pipeline](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/ci.yml)
 [![Nave-Mãe (Infra & Deploy)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/infra-deploy.yml/badge.svg?branch=main)](https://github.com/gabs-passarinho-garcia/EleveRats/actions/workflows/infra-deploy.yml)
+[![API Status](https://img.shields.io/uptimerobot/status/m802749458-ad5567b7b3e086a5ae920136?style=flat-square&label=API%20Status)](https://stats.uptimerobot.com/9SIy6omWg6)
 
 O **EleveRats 2026** é o motor de automação e validação de check-ins para o desafio oficial de constância e desenvolvimento do **Ministério Eleve**.
 
