@@ -6,15 +6,15 @@ terraform {
     }
     neon = {
       source  = "kislerdm/neon"
-      version = "~> 0.2"
+      version = "~> 0.13"
     }
     render = {
       source  = "render-oss/render"
-      version = "~> 1.0"
+      version = "~> 1.8"
     }
     upstash = {
       source  = "upstash/upstash"
-      version = "~> 1.5"
+      version = "~> 2.0"
     }
   }
 }
