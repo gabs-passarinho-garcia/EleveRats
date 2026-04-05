@@ -78,6 +78,7 @@ jobs:
             TF_VAR_render_otel_service_name: ${{ secrets.RENDER_OTEL_SERVICE_NAME }}
             TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
             TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+            TF_VAR_render_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

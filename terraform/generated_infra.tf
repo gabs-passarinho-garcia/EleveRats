@@ -72,6 +72,9 @@ resource "render_web_service" "api" {
     DATABASE_URL = {
       value = var.render_database_url
     }
+    JwtSettings__SecretKey = {
+      value = var.render_jwt_secret_key
+    }
     OTEL_EXPORTER_OTLP_ENDPOINT = {
       value = var.render_otel_exporter_otlp_endpoint
     }
@@ -129,7 +132,7 @@ resource "render_web_service" "api" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = [
+    ignore_changes = [
       env_vars,
       runtime_source
     ]

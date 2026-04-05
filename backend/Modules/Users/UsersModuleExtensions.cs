@@ -15,6 +15,7 @@
 // </copyright>
 
 using EleveRats.Core.Application.Interfaces;
+using EleveRats.Core.Application.Settings;
 using EleveRats.Core.Infra.Persistence;
 using EleveRats.Modules.Users.Application.Interfaces;
 using EleveRats.Modules.Users.Application.Repositories;
@@ -60,7 +61,10 @@ internal static class UsersModuleExtensions
         // 2. Register the DbContext with PostgreSQL
         services.AddDbContext<UsersDbContext>(options => options.UseNpgsql(connectionString));
 
-        // 3. Register Module Cache Options
+        // 3. Register Settings (Reads from JwtSettings section)
+        services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+
+        // 4. Register Module Cache Options
         services.Configure<UsersCacheOptions>(configuration.GetSection("Cache:Modules:Users"));
 
         // 4. Register Repositories (Decorated with Cache)
