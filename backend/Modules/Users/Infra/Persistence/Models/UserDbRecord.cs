@@ -54,4 +54,6 @@ internal sealed class UserDbRecord : AuditableDbRecord
     public string? ExternalSsoCode { get; set; }
 
     public SsoProvider? ExternalSso { get; set; }
+
+    public ICollection<RefreshTokenDbRecord> RefreshTokens { get; set; } = [];
 }
