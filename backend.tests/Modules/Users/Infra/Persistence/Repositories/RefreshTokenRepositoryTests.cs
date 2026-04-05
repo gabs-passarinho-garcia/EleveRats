@@ -59,7 +59,7 @@ public sealed class RefreshTokenRepositoryTests : IDisposable
     public async Task AddAsync_ShouldTrackRecordInContext_WithoutCommitting()
     {
         // Arrange
-        RefreshToken token = RefreshToken.Create(
+        var token = RefreshToken.Create(
             _userId,
             _tokenHash,
             DateTime.UtcNow.AddDays(7),
@@ -86,7 +86,7 @@ public sealed class RefreshTokenRepositoryTests : IDisposable
     {
         // Arrange
         DateTime expiresAt = DateTime.UtcNow.AddDays(14);
-        RefreshToken token = RefreshToken.Create(_userId, _tokenHash, expiresAt, _ipAddress);
+        var token = RefreshToken.Create(_userId, _tokenHash, expiresAt, _ipAddress);
 
         // Act
         await _repository.AddAsync(token);
@@ -251,7 +251,7 @@ public sealed class RefreshTokenRepositoryTests : IDisposable
 
         // Reconstitute domain entity with revocation
         DateTime revokedAt = DateTime.UtcNow;
-        RefreshToken updatedToken = RefreshToken.Reconstitute(
+        var updatedToken = RefreshToken.Reconstitute(
             id,
             _userId,
             _tokenHash,
@@ -293,7 +293,7 @@ public sealed class RefreshTokenRepositoryTests : IDisposable
         _dbContext.Entry(record).State = EntityState.Detached;
 
         DateTime revokedAt = DateTime.UtcNow;
-        RefreshToken revokedToken = RefreshToken.Reconstitute(
+        var revokedToken = RefreshToken.Reconstitute(
             id,
             _userId,
             _tokenHash,
