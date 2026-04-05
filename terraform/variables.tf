@@ -110,3 +110,14 @@ variable "render_jwt_secret_key" {
   sensitive   = true
   default     = ""
 }
+
+variable "cloudflare_zone_id" {
+  description = "O Zone ID do domínio raiz (gabspassarinhogarcia.uk)"
+  type        = string
+}
+
+variable "r2_custom_domain" {
+  description = "Subdomínio público para os assets do EleveRats"
+  type        = string
+  default     = "eleverats-assets.gabspassarinhogarcia.uk"
+}
