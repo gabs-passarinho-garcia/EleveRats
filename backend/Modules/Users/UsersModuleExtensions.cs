@@ -16,7 +16,9 @@
 
 using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Infra.Persistence;
+using EleveRats.Modules.Users.Application.Interfaces;
 using EleveRats.Modules.Users.Application.Repositories;
+using EleveRats.Modules.Users.Application.Services;
 using EleveRats.Modules.Users.Infra.Persistence;
 using EleveRats.Modules.Users.Infra.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -82,6 +84,15 @@ internal static class UsersModuleExtensions
             sp.GetRequiredService<ICacheService>(),
             sp.GetRequiredService<IOptions<UsersCacheOptions>>()
         ));
+
+        // 5. Register RefreshToken Repository (no cache needed for token operations)
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        // 6. Register Unit of Work (UsersDbContext implements IUsersUnitOfWork)
+        services.AddScoped<IUsersUnitOfWork>(sp => sp.GetRequiredService<UsersDbContext>());
+
+        // 7. Register Application Services
+        services.AddScoped<ITokenService, TokenService>();
 
         return services;
     }

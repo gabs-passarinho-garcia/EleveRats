@@ -14,7 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-using System;
+using EleveRats.Modules.Users.Application.Interfaces;
 using EleveRats.Modules.Users.Infra.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +23,9 @@ namespace EleveRats.Modules.Users.Infra.Persistence;
 /// <summary>
 /// Database context scoped specifically to the Users module.
 /// </summary>
-internal sealed class UsersDbContext(DbContextOptions<UsersDbContext> options) : DbContext(options)
+internal sealed class UsersDbContext(DbContextOptions<UsersDbContext> options)
+    : DbContext(options),
+        IUsersUnitOfWork
 {
     /// <summary>
     /// Represents the users table in the database.
@@ -39,6 +41,11 @@ internal sealed class UsersDbContext(DbContextOptions<UsersDbContext> options) :
     /// Represents the organizations table in the database.
     /// </summary>
     internal DbSet<OrganizationDbRecord> Organizations => Set<OrganizationDbRecord>();
+
+    /// <summary>
+    /// Represents the refresh tokens table in the database.
+    /// </summary>
+    internal DbSet<RefreshTokenDbRecord> RefreshTokens => Set<RefreshTokenDbRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
