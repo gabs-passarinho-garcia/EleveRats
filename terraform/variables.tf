@@ -103,3 +103,10 @@ variable "render_otel_service_name" {
   description = "Nome do serviço OTEL para o Render"
   type        = string
 }
+
+variable "render_jwt_secret_key" {
+  description = "Chave secreta do JWT para o Render"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
