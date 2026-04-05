@@ -13,6 +13,7 @@ resource "upstash_redis_database" "cache" {
 
   lifecycle {
     prevent_destroy = true
+    ignore_changes  = [budget]
   }
 }
 
