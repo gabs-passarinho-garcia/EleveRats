@@ -28,6 +28,9 @@ jobs:
             TF_VAR_render_owner_id: ${{ secrets.RENDER_OWNER_ID }}
             TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
             TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
+            TF_VAR_render_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
+            TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+            TF_VAR_r2_custom_domain: ${{ secrets.R2_CUSTOM_DOMAIN }}
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -79,6 +82,8 @@ jobs:
             TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
             TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
             TF_VAR_render_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
+            TF_VAR_r2_custom_domain: ${{ secrets.R2_CUSTOM_DOMAIN }}
+            TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
