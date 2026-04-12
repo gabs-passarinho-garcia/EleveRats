@@ -15,20 +15,11 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using EleveRats.Core.Infra.Persistence.Models;
+using EleveRats.Modules.Users.Domain.Enums;
 
 namespace EleveRats.Modules.Users.Infra.Persistence.Models;
-
-/// <summary>
-/// Supported Single Sign-On providers.
-/// </summary>
-internal enum SsoProvider
-{
-    None = 0,
-    Google = 1,
-    Apple = 2,
-    Microsoft = 3,
-}
 
 /// <summary>
 /// Database record for the User entity.

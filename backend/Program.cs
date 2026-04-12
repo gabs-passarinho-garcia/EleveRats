@@ -17,6 +17,7 @@
 using EleveRats.Core;
 using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Infra.Caching;
+using EleveRats.Core.Infra.Web.Middlewares;
 using EleveRats.Modules.Users;
 using Grafana.OpenTelemetry;
 using OpenTelemetry;
@@ -99,6 +100,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseMiddleware<SessionMiddleware>();
 app.MapControllers();
 
 // Prometheus Metrics Endpoint

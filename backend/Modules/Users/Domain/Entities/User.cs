@@ -16,6 +16,7 @@
 
 using System;
 using System.Text.RegularExpressions;
+using EleveRats.Modules.Users.Domain.Enums;
 
 namespace EleveRats.Modules.Users.Domain.Entities;
 
@@ -34,6 +35,10 @@ internal partial class User
         string email,
         string passwordHash,
         bool isActive,
+        bool isMaster,
+        string? phone,
+        string? externalSsoCode,
+        SsoProvider? externalSso,
         DateTimeOffset createdAt,
         DateTimeOffset? updatedAt = null
     )
@@ -42,6 +47,10 @@ internal partial class User
         Email = email;
         PasswordHash = passwordHash;
         IsActive = isActive;
+        IsMaster = isMaster;
+        Phone = phone;
+        ExternalSsoCode = externalSsoCode;
+        ExternalSso = externalSso;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
     }
@@ -66,6 +75,14 @@ internal partial class User
     /// </summary>
     public bool IsActive { get; private set; }
 
+    public bool IsMaster { get; private set; }
+
+    public string? Phone { get; private set; }
+
+    public string? ExternalSsoCode { get; private set; }
+
+    public SsoProvider? ExternalSso { get; private set; }
+
     // --- Audit Metadata ---
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -80,8 +97,19 @@ internal partial class User
     /// </summary>
     /// <param name="email">The user's email address.</param>
     /// <param name="passwordHash">The pre-hashed password.</param>
+    /// <param name="isMaster">A value indicating whether the user is a master user.</param>
+    /// <param name="phone">The user's phone number.</param>
+    /// <param name="externalSsoCode">The user's external SSO code.</param>
+    /// <param name="externalSso">The user's external SSO provider.</param>
     /// <returns>A new, active User instance.</returns>
-    public static User Create(string email, string passwordHash)
+    public static User Create(
+        string email,
+        string passwordHash,
+        bool isMaster = false,
+        string? phone = null,
+        string? externalSsoCode = null,
+        SsoProvider? externalSso = null
+    )
     {
         ValidateEmail(email);
 
@@ -95,6 +123,10 @@ internal partial class User
             email: email.ToUpperInvariant(),
             passwordHash: passwordHash,
             isActive: true,
+            isMaster: isMaster,
+            phone: phone,
+            externalSsoCode: externalSsoCode,
+            externalSso: externalSso,
             createdAt: DateTimeOffset.UtcNow
         );
     }
@@ -107,6 +139,10 @@ internal partial class User
     /// <param name="email">The user's email address.</param>
     /// <param name="passwordHash">The pre-hashed password.</param>
     /// <param name="isActive">A value indicating whether the user is active and allowed to log in.</param>
+    /// <param name="isMaster">A value indicating whether the user is a master user.</param>
+    /// <param name="phone">The user's phone number.</param>
+    /// <param name="externalSsoCode">The user's external SSO code.</param>
+    /// <param name="externalSso">The user's external SSO provider.</param>
     /// <param name="createdAt">The date and time when the user was created.</param>
     /// <param name="updatedAt">The date and time when the user was last updated.</param>
     /// <returns>A new, active User instance.</returns>
@@ -115,9 +151,25 @@ internal partial class User
         string email,
         string passwordHash,
         bool isActive,
+        bool isMaster,
+        string? phone,
+        string? externalSsoCode,
+        SsoProvider? externalSso,
         DateTimeOffset createdAt,
         DateTimeOffset? updatedAt
-    ) => new(id, email, passwordHash, isActive, createdAt, updatedAt);
+    ) =>
+        new(
+            id,
+            email,
+            passwordHash,
+            isActive,
+            isMaster,
+            phone,
+            externalSsoCode,
+            externalSso,
+            createdAt,
+            updatedAt
+        );
 
     // --- Domain Behaviors ---
 
