@@ -181,7 +181,7 @@ public class SessionMiddlewareTests
                     && u.ProfileId == profileId
                     && u.OrgId == orgId
                     && u.ImpersonatorId == impersonatorId
-                    && u.IsImpersonating == true
+                    && u.IsImpersonating
                 )
             );
         await _next.Received(1).Invoke(context);
