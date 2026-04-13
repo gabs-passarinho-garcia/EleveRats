@@ -104,8 +104,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseMiddleware<SessionMiddleware>();
+app.UseAuthorization();
 app.MapControllers();
 
 // Prometheus Metrics Endpoint
