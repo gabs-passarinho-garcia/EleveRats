@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -65,7 +65,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <NoWarn>$(NoWarn);1591;CA1515</NoWarn>
     <!-- SonarQube Configuration -->
     <SonarProjectKey>EleveRats_Backend</SonarProjectKey>
     <SonarOrganization>eleverats</SonarOrganization>
