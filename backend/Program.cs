@@ -15,8 +15,10 @@
 // </copyright>
 
 using EleveRats.Core;
+using EleveRats.Core.Application.Contexts;
 using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Infra.Caching;
+using EleveRats.Core.Infra.Web.Middlewares;
 using EleveRats.Modules.Users;
 using Grafana.OpenTelemetry;
 using OpenTelemetry;
@@ -75,6 +77,9 @@ builder
 // Register Core Cache Service
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
+// Register UserContext to maintain session state across the request
+builder.Services.AddSingleton<IUserContext, UserContext>();
+
 // --- 2. Module Registration ---
 // Users Module (Persistence, Repositories, Use Cases)
 builder.Services.AddUsersModule(builder.Configuration);
@@ -98,6 +103,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseMiddleware<SessionMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 

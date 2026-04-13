@@ -81,6 +81,10 @@ internal sealed class UserRepository(UsersDbContext dbContext) : IUserRepository
             email: record.Email,
             passwordHash: record.PasswordHash,
             isActive: record.IsActive,
+            isMaster: record.IsMaster,
+            phone: record.Phone,
+            externalSsoCode: record.ExternalSsoCode,
+            externalSso: record.ExternalSso,
             createdAt: record.CreatedAt,
             updatedAt: record.UpdatedAt
         );
@@ -97,6 +101,10 @@ internal sealed class UserRepository(UsersDbContext dbContext) : IUserRepository
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             IsActive = user.IsActive,
+            IsMaster = user.IsMaster,
+            Phone = user.Phone,
+            ExternalSsoCode = user.ExternalSsoCode,
+            ExternalSso = user.ExternalSso,
         };
     }
 }

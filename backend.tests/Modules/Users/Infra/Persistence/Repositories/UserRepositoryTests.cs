@@ -11,7 +11,7 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
 using System;
@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using EleveRats.Modules.Users.Domain.Entities;
+using EleveRats.Modules.Users.Domain.Enums;
 using EleveRats.Modules.Users.Infra.Persistence;
 using EleveRats.Modules.Users.Infra.Persistence.Models;
 using EleveRats.Modules.Users.Infra.Persistence.Repositories;
@@ -57,6 +58,10 @@ public sealed class UserRepositoryTests : IDisposable
             Email = "TEST@ELEVERATS.COM",
             PasswordHash = "hashed",
             IsActive = true,
+            IsMaster = true,
+            Phone = "123456789",
+            ExternalSsoCode = "google-code",
+            ExternalSso = SsoProvider.Google,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         await _dbContext.Users.AddAsync(record);
@@ -71,6 +76,10 @@ public sealed class UserRepositoryTests : IDisposable
         result.Email.Should().Be(record.Email);
         result.PasswordHash.Should().Be(record.PasswordHash);
         result.IsActive.Should().Be(record.IsActive);
+        result.IsMaster.Should().Be(record.IsMaster);
+        result.Phone.Should().Be(record.Phone);
+        result.ExternalSsoCode.Should().Be(record.ExternalSsoCode);
+        result.ExternalSso.Should().Be(record.ExternalSso);
     }
 
     [Fact]
@@ -94,6 +103,7 @@ public sealed class UserRepositoryTests : IDisposable
             Email = email,
             PasswordHash = "hashed",
             IsActive = true,
+            IsMaster = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         await _dbContext.Users.AddAsync(record);
@@ -111,7 +121,14 @@ public sealed class UserRepositoryTests : IDisposable
     public async Task AddAsync_ShouldAddRecordToDbContext()
     {
         // Arrange
-        var user = User.Create("new@test.com", "hash");
+        var user = User.Create(
+            "new@test.com",
+            "hash",
+            isMaster: true,
+            phone: "987654321",
+            externalSsoCode: "sso123",
+            externalSso: SsoProvider.Apple
+        );
 
         // Act
         await _repository.AddAsync(user);
@@ -123,6 +140,10 @@ public sealed class UserRepositoryTests : IDisposable
 
         record!.Id.Should().Be(user.Id);
         record.Email.Should().Be(user.Email);
+        record.IsMaster.Should().Be(user.IsMaster);
+        record.Phone.Should().Be(user.Phone);
+        record.ExternalSsoCode.Should().Be(user.ExternalSsoCode);
+        record.ExternalSso.Should().Be(user.ExternalSso);
     }
 
     [Fact]
@@ -136,13 +157,25 @@ public sealed class UserRepositoryTests : IDisposable
             Email = "OLD@TEST.COM",
             PasswordHash = "old",
             IsActive = true,
+            IsMaster = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         _dbContext.Users.Add(record);
         _dbContext.SaveChanges();
         _dbContext.Entry(record).State = EntityState.Detached; // Simulate starting from a domain object
 
-        var user = User.Reconstitute(id, "NEW@TEST.COM", "new", true, record.CreatedAt, null);
+        var user = User.Reconstitute(
+            id,
+            "NEW@TEST.COM",
+            "new",
+            isActive: true,
+            isMaster: true,
+            phone: "111",
+            externalSsoCode: null,
+            externalSso: null,
+            createdAt: record.CreatedAt,
+            updatedAt: null
+        );
 
         // Act
         _repository.Update(user);
@@ -151,6 +184,8 @@ public sealed class UserRepositoryTests : IDisposable
         UserDbRecord? updatedRecord = _dbContext.Users.Local.FirstOrDefault(x => x.Id == id);
         updatedRecord.Should().NotBeNull();
         updatedRecord!.Email.Should().Be("NEW@TEST.COM");
+        updatedRecord.IsMaster.Should().BeTrue();
+        updatedRecord.Phone.Should().Be("111");
         _dbContext.Entry(updatedRecord).State.Should().Be(EntityState.Modified);
     }
 

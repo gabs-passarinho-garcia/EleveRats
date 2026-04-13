@@ -19,7 +19,7 @@ namespace EleveRats.Modules.Users.Application.Interfaces;
 /// <summary>
 /// Service responsible for handling JWT and Refresh Token lifecycles.
 /// </summary>
-internal interface ITokenService
+public interface ITokenService
 {
     /// <summary>
     /// Generates a new JWT and Refresh token pair for a user.
@@ -51,7 +51,7 @@ internal interface ITokenService
 /// <summary>
 /// DTO containing the generated access and refresh tokens.
 /// </summary>
-internal record TokenResponse(
+public record TokenResponse(
     string AccessToken,
     string RefreshToken,
     DateTime ExpiresAt,

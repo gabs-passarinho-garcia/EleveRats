@@ -82,17 +82,42 @@ public class UserTests
         string email = "persisted@test.com";
         string hash = "old_hash";
         bool isActive = false;
+        bool isMaster = true;
+        string phone = "+5511999999999";
+        string ssoCode = "google123";
+        EleveRats.Modules.Users.Domain.Enums.SsoProvider ssoProvider = EleveRats
+            .Modules
+            .Users
+            .Domain
+            .Enums
+            .SsoProvider
+            .Google;
         DateTimeOffset createdAt = DateTimeOffset.UtcNow.AddDays(-1);
         DateTimeOffset updatedAt = DateTimeOffset.UtcNow;
 
         // Act
-        var user = User.Reconstitute(id, email, hash, isActive, createdAt, updatedAt);
+        var user = User.Reconstitute(
+            id,
+            email,
+            hash,
+            isActive,
+            isMaster,
+            phone,
+            ssoCode,
+            ssoProvider,
+            createdAt,
+            updatedAt
+        );
 
         // Assert
         user.Id.Should().Be(id);
         user.Email.Should().Be(email);
         user.PasswordHash.Should().Be(hash);
         user.IsActive.Should().Be(isActive);
+        user.IsMaster.Should().Be(isMaster);
+        user.Phone.Should().Be(phone);
+        user.ExternalSsoCode.Should().Be(ssoCode);
+        user.ExternalSso.Should().Be(ssoProvider);
         user.CreatedAt.Should().Be(createdAt);
         user.UpdatedAt.Should().Be(updatedAt);
     }
