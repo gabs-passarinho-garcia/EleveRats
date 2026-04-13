@@ -44,7 +44,7 @@ public class UsersController(IImpersonateUserUseCase impersonateUseCase) : Contr
     /// <param name="targetProfileId">ID do guerreiro que terá a conta assumida.</param>
     /// <returns>Um novo par de tokens (JWT com claim 'act' e Refresh Token).</returns>
     [HttpPost("impersonate/{targetProfileId:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Impersonate(Guid targetProfileId)
