@@ -51,14 +51,33 @@ internal class SessionMiddleware(RequestDelegate next)
                 return;
             }
 
-            // Extração dos dados bélicos do JWT
-            var userId = Guid.Parse(context.User.FindFirst(JwtRegisteredClaimNames.Sub)!.Value);
-            var profileId = Guid.Parse(context.User.FindFirst("profileId")!.Value);
-            var orgId = Guid.Parse(context.User.FindFirst("orgId")!.Value);
+            // Extração segura dos dados bélicos do JWT (Defesa em Profundidade)
+            string? subClaim = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            string? profileIdClaim = context.User.FindFirst("profileId")?.Value;
+            string? orgIdClaim = context.User.FindFirst("orgId")?.Value;
 
-            // O claim "act" carrega a Sombra (ImpersonatorId) gerada lá no TokenService
+            if (!Guid.TryParse(subClaim, out Guid userId) ||
+                !Guid.TryParse(profileIdClaim, out Guid profileId) ||
+                !Guid.TryParse(orgIdClaim, out Guid orgId))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return;
+            }
+
+            // O claim "act" carrega a Sombra (ImpersonatorId) - Validamos se existir
             string? actClaim = context.User.FindFirst("act")?.Value;
-            Guid? impersonatorId = actClaim != null ? Guid.Parse(actClaim) : null;
+            Guid? impersonatorId = null;
+
+            if (actClaim != null)
+            {
+                if (!Guid.TryParse(actClaim, out Guid parsedImpersonatorId))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+
+                impersonatorId = parsedImpersonatorId;
+            }
 
             string traceId = context.TraceIdentifier;
             string ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? _unknownIpAddress;
