@@ -16,7 +16,7 @@
 
 namespace EleveRats.Modules.Users.Application.Interfaces;
 
-internal interface IImpersonateUserUseCase
+public interface IImpersonateUserUseCase
 {
     Task<TokenResponse> ExecuteAsync(Guid targetProfileId, string ipAddress);
 }

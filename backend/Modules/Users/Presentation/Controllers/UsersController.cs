@@ -30,27 +30,30 @@ namespace EleveRats.Modules.Users.Presentation.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize] // O Sentinela (Middleware) já garante o contexto aqui
-internal class UsersController(IImpersonateUserUseCase impersonateUseCase) : ControllerBase
+public class UsersController(IImpersonateUserUseCase impersonateUseCase) : ControllerBase
 {
     private const string _unknownIpAddress = "unknown";
     private readonly IImpersonateUserUseCase _impersonateUseCase = impersonateUseCase;
 
     /// <summary>
-    /// Ativa o Modo Sombra: Permite que um Master User assuma o controle de outra conta.
+    /// Impersonate User.
     /// </summary>
-    /// <param name="targetUserId">ID do guerreiro que terá a conta assumida.</param>
+    /// <remarks>
+    /// Ativa o Modo Sombra: Permite que um Master User assuma o controle de outra conta.
+    /// </remarks>
+    /// <param name="targetProfileId">ID do guerreiro que terá a conta assumida.</param>
     /// <returns>Um novo par de tokens (JWT com claim 'act' e Refresh Token).</returns>
-    [HttpPost("impersonate/{targetUserId:guid}")]
+    [HttpPost("impersonate/{targetProfileId:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Impersonate(Guid targetUserId)
+    public async Task<IActionResult> Impersonate(Guid targetProfileId)
     {
         // Extração de metadados de infraestrutura (Responsabilidade da Presentation)
         string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? _unknownIpAddress;
 
         // Delegação total da orquestração para o Use Case
-        TokenResponse result = await _impersonateUseCase.ExecuteAsync(targetUserId, ipAddress);
+        TokenResponse result = await _impersonateUseCase.ExecuteAsync(targetProfileId, ipAddress);
 
         return Ok(result);
     }

@@ -20,6 +20,7 @@ using EleveRats.Core.Infra.Persistence;
 using EleveRats.Modules.Users.Application.Interfaces;
 using EleveRats.Modules.Users.Application.Repositories;
 using EleveRats.Modules.Users.Application.Services;
+using EleveRats.Modules.Users.Application.UseCases;
 using EleveRats.Modules.Users.Infra.Persistence;
 using EleveRats.Modules.Users.Infra.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -97,6 +98,8 @@ internal static class UsersModuleExtensions
 
         // 7. Register Application Services
         services.AddScoped<ITokenService, TokenService>();
+
+        services.AddScoped<IImpersonateUserUseCase, ImpersonateUserUseCase>();
 
         return services;
     }
