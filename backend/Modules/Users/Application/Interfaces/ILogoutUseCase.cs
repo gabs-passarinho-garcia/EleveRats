@@ -1,4 +1,4 @@
-// <copyright file="UserSession.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// <copyright file="ILogoutUseCase.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -15,20 +15,19 @@
 // </copyright>
 
 using System;
+using System.Threading.Tasks;
 
-namespace EleveRats.Core.Application.Contexts;
+namespace EleveRats.Modules.Users.Application.Interfaces;
 
-// O Contrato de Sessão
-internal record UserSession(
-    Guid UserId,
-    Guid ProfileId,
-    Guid OrgId,
-    string TraceId,
-    string IpAddress,
-    Guid? ImpersonatorId,
-    string Jti
-)
+/// <summary>
+/// Defines the use case for securely ending a user session.
+/// </summary>
+public interface ILogoutUseCase
 {
-    // Facilita a verificação tática se é um Master User disfarçado
-    public bool IsImpersonating => ImpersonatorId.HasValue;
+    /// <summary>
+    /// Executes the logout process, revoking both access and refresh tokens.
+    /// </summary>
+    /// <param name="refreshToken">The raw refresh token provided by the client.</param>
+    /// <returns>A task representing the asynchronous logout operation.</returns>
+    Task ExecuteAsync(string refreshToken);
 }

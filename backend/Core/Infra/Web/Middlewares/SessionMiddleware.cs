@@ -86,7 +86,7 @@ internal class SessionMiddleware(RequestDelegate next)
 
             // Popula o contexto
             userContext.Set(
-                new UserSession(userId, profileId, orgId, traceId, ipAddress, impersonatorId)
+                new UserSession(userId, profileId, orgId, traceId, ipAddress, impersonatorId, jti)
             );
         }
 

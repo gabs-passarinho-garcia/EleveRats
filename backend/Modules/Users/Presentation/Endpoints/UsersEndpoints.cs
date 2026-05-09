@@ -15,8 +15,10 @@
 // </copyright>
 
 using System;
+using EleveRats.Core.Application.Interfaces;
 using EleveRats.Modules.Users.Application.Interfaces;
 using EleveRats.Modules.Users.Application.UseCases;
+using EleveRats.Modules.Users.Presentation.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -50,7 +52,8 @@ public static class UsersEndpoints
                 ) =>
                 {
                     // Extração de metadados de infraestrutura (Responsabilidade da Presentation)
-                    string ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? _unknownIpAddress;
+                    string ipAddress =
+                        context.Connection.RemoteIpAddress?.ToString() ?? _unknownIpAddress;
 
                     // Delegação total da orquestração para o Use Case
                     TokenResponse result = await impersonateUseCase.ExecuteAsync(
@@ -67,6 +70,25 @@ public static class UsersEndpoints
             .WithSummary("Impersonate User")
             .WithDescription(
                 "Ativa o Modo Sombra: Permite que um Master User assuma o controle de outra conta."
+            );
+
+        // Logout User
+        // Ends the current session by revoking the Refresh Token and blacklisting the JTI in Redis.
+        group
+            .MapPost(
+                "logout",
+                async (LogoutRequest request, ILogoutUseCase logoutUseCase) =>
+                {
+                    // Total async delegation sem vazar regras de sessão pra presentation layer
+                    await logoutUseCase.ExecuteAsync(request.RefreshToken);
+                    return Results.NoContent();
+                }
+            )
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithSummary("Logout User")
+            .WithDescription(
+                "Ends the current session. Invalidates the Refresh Token in PostgreSQL and blacklists the Access Token in Redis."
             );
     }
 }

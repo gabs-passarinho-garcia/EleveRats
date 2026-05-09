@@ -1,4 +1,4 @@
-// <copyright file="UserSession.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
+// <copyright file="LogoutRequest.cs" company="Gabriel Passarinho Garcia and EleveRats Team">
 // Copyright (C) 2026 Gabriel Passarinho Garcia and EleveRats Team
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -14,21 +14,10 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
-using System;
+namespace EleveRats.Modules.Users.Presentation.Contracts;
 
-namespace EleveRats.Core.Application.Contexts;
-
-// O Contrato de Sessão
-internal record UserSession(
-    Guid UserId,
-    Guid ProfileId,
-    Guid OrgId,
-    string TraceId,
-    string IpAddress,
-    Guid? ImpersonatorId,
-    string Jti
-)
-{
-    // Facilita a verificação tática se é um Master User disfarçado
-    public bool IsImpersonating => ImpersonatorId.HasValue;
-}
+/// <summary>
+/// Data Transfer Object containing the necessary payload to perform a logout.
+/// </summary>
+/// <param name="RefreshToken">The raw refresh token to be revoked.</param>
+public record LogoutRequest(string RefreshToken);

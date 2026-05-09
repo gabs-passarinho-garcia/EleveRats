@@ -100,6 +100,7 @@ internal static class UsersModuleExtensions
         services.AddScoped<ITokenService, TokenService>();
 
         services.AddScoped<IImpersonateUserUseCase, ImpersonateUserUseCase>();
+        services.AddScoped<ILogoutUseCase, LogoutUseCase>();
 
         return services;
     }
