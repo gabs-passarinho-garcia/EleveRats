@@ -56,9 +56,11 @@ internal class SessionMiddleware(RequestDelegate next)
             string? profileIdClaim = context.User.FindFirst("profileId")?.Value;
             string? orgIdClaim = context.User.FindFirst("orgId")?.Value;
 
-            if (!Guid.TryParse(subClaim, out Guid userId) ||
-                !Guid.TryParse(profileIdClaim, out Guid profileId) ||
-                !Guid.TryParse(orgIdClaim, out Guid orgId))
+            if (
+                !Guid.TryParse(subClaim, out Guid userId)
+                || !Guid.TryParse(profileIdClaim, out Guid profileId)
+                || !Guid.TryParse(orgIdClaim, out Guid orgId)
+            )
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
