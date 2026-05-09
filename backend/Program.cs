@@ -20,6 +20,7 @@ using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Infra.Caching;
 using EleveRats.Core.Infra.Web.Middlewares;
 using EleveRats.Modules.Users;
+using EleveRats.Modules.Users.Presentation.Endpoints;
 using Grafana.OpenTelemetry;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -84,8 +85,9 @@ builder.Services.AddSingleton<IUserContext, UserContext>();
 // Users Module (Persistence, Repositories, Use Cases)
 builder.Services.AddUsersModule(builder.Configuration);
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Auth Services
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 // Health Checks
 builder.Services.AddHealthChecks();
@@ -106,7 +108,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseMiddleware<SessionMiddleware>();
 app.UseAuthorization();
-app.MapControllers();
 
 // Prometheus Metrics Endpoint
 app.UseMetricServer();
@@ -114,6 +115,7 @@ app.UseHttpMetrics();
 
 // Map Module Endpoints
 // Each module should expose its own mapping extensions
+app.MapUserEndpoints();
 
 // Root Endpoint - Dashboard / Status
 app.MapGet(
