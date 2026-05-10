@@ -90,11 +90,18 @@ public class Argon2PasswordHasher : IPasswordHasher
                 ? p
                 : _degreeOfParallelism;
 
-        byte[] salt = Convert.FromBase64String(parts[4]);
-        byte[] expectedHash = Convert.FromBase64String(parts[5]);
+        try
+        {
+            byte[] salt = Convert.FromBase64String(parts[4]);
+            byte[] expectedHash = Convert.FromBase64String(parts[5]);
 
-        byte[] actualHash = GenerateHash(password, salt, iterations, memory, parallelism);
-        return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            byte[] actualHash = GenerateHash(password, salt, iterations, memory, parallelism);
+            return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     private static bool VerifyLegacyPassword(string password, string hashString)
