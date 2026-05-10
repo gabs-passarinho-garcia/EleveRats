@@ -98,6 +98,9 @@ services:
       - GRAFANA_READER_PASSWORD=grafana_password
       - METABASE_DB_PASSWORD=metabase_password
       - SONAR_DB_PASSWORD=sonar_password
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
     ports:
       - "3000:3000"
     volumes:

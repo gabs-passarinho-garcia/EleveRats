@@ -78,7 +78,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -104,7 +105,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -131,7 +133,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -161,7 +164,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -208,7 +212,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -254,7 +259,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
@@ -313,7 +319,8 @@ public class ImpersonateUserUseCaseTests
             Guid.CreateVersion7(),
             "trace",
             "ip",
-            null
+            null,
+            Guid.CreateVersion7().ToString()
         );
         _userContext.Current.Returns(masterSession);
 
