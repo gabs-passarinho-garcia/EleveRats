@@ -14,6 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
+using System.Text;
 using EleveRats.Core;
 using EleveRats.Core.Application.Contexts;
 using EleveRats.Core.Application.Interfaces;
@@ -22,6 +23,8 @@ using EleveRats.Core.Infra.Web.Middlewares;
 using EleveRats.Modules.Users;
 using EleveRats.Modules.Users.Presentation.Endpoints;
 using Grafana.OpenTelemetry;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -85,8 +88,43 @@ builder.Services.AddSingleton<IUserContext, UserContext>();
 // Users Module (Persistence, Repositories, Use Cases)
 builder.Services.AddUsersModule(builder.Configuration);
 
-// Auth Services
-builder.Services.AddAuthentication();
+// Auth Services — JWT Bearer as the default scheme.
+// When a new scheme is needed (e.g. API Key for webhooks), add it here via .AddScheme<>().
+// TokenValidationParameters are configured lazily via AddOptions so the WebApplicationFactory
+// can inject test configuration before JWT options are evaluated — avoiding the startup throw.
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer();
+
+builder
+    .Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IConfiguration>(
+        (options, configuration) =>
+        {
+            string secretKey =
+                configuration["JwtSettings:SecretKey"]
+                ?? throw new InvalidOperationException(
+                    "JwtSettings:SecretKey is missing. Set it via environment variables or user secrets."
+                );
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = configuration["JwtSettings:Issuer"] ?? string.Empty,
+                ValidateAudience = true,
+                ValidAudience = configuration["JwtSettings:Audience"] ?? string.Empty,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                ClockSkew = TimeSpan.Zero, // Sem tolerância extra: o token expira exatamente quando diz
+            };
+        }
+    );
+
 builder.Services.AddAuthorization();
 
 // Health Checks
@@ -158,3 +196,11 @@ app.MapGet(
 app.MapHealthChecks("/health");
 
 await app.RunAsync();
+
+/// <summary>
+/// This class is used to bootstrap the application and is required for integration tests.
+/// </summary>
+public partial class Program
+{
+    // Empty class required by WebApplicationFactory
+}
