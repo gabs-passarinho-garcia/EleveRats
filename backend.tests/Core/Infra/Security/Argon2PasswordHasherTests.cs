@@ -40,17 +40,31 @@ public class Argon2PasswordHasherTests
 
         // Assert
         hash.Should().NotBeNullOrWhiteSpace();
-        hash.Should().Contain(":", "because the output should be formatted as salt:hash");
+        hash.Should().StartWith("$argon2id$", "because the output should be in PHC format");
 
-        string[] parts = hash.Split(':');
-        parts.Length.Should().Be(2);
+        string[] parts = hash.Split('$');
+        parts.Length.Should().Be(6); // Empty, argon2id, v=19, parameters, salt, hash
 
         // Ensure they are valid Base64
-        Action actSalt = () => Convert.FromBase64String(parts[0]);
-        Action actHash = () => Convert.FromBase64String(parts[1]);
+        Action actSalt = () => Convert.FromBase64String(parts[4]);
+        Action actHash = () => Convert.FromBase64String(parts[5]);
 
         actSalt.Should().NotThrow();
         actHash.Should().NotThrow();
+    }
+
+    [Fact]
+    public void VerifyPassword_WithLegacyHash_ShouldReturnFalseForInvalidHash()
+    {
+        // Arrange
+        string password = "LegacyPassword";
+        string malformedLegacyHash = "invalid-salt:invalid-hash";
+
+        // Act
+        bool result = _hasher.VerifyPassword(password, malformedLegacyHash);
+
+        // Assert
+        result.Should().BeFalse("because the legacy hash provided is invalid");
     }
 
     [Fact]
