@@ -22,5 +22,5 @@ public interface IPasswordHasher
     string HashPassword(string password);
 
     // Validates a password against a stored hash
-    bool VerifyPassword(string password, string hash);
+    bool VerifyPassword(string password, string hashString);
 }

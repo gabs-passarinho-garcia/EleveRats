@@ -18,7 +18,9 @@ using System.Text;
 using EleveRats.Core;
 using EleveRats.Core.Application.Contexts;
 using EleveRats.Core.Application.Interfaces;
+using EleveRats.Core.Application.Interfaces.Security;
 using EleveRats.Core.Infra.Caching;
+using EleveRats.Core.Infra.Security;
 using EleveRats.Core.Infra.Web.Filters;
 using EleveRats.Core.Infra.Web.Middlewares;
 using EleveRats.Modules.Users;
@@ -82,6 +84,9 @@ builder
 
 // Register Core Cache Service
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+
+// Register Password Hasher
+builder.Services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
 
 // Register UserContext to maintain session state across the request
 builder.Services.AddSingleton<IUserContext, UserContext>();
