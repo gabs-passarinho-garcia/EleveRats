@@ -39,7 +39,7 @@ public class UsersEndpointsTests : IClassFixture<EleveRatsApplicationFactory>
         var request = new LogoutRequest("valid-refresh-token");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/users/logout", request);
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/users/logout", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -54,7 +54,7 @@ public class UsersEndpointsTests : IClassFixture<EleveRatsApplicationFactory>
         var request = new LogoutRequest("valid-refresh-token");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/users/logout", request);
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/users/logout", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -68,7 +68,10 @@ public class UsersEndpointsTests : IClassFixture<EleveRatsApplicationFactory>
         var targetProfileId = Guid.CreateVersion7();
 
         // Act
-        var response = await _client.PostAsync($"/api/users/impersonate/{targetProfileId}", null);
+        HttpResponseMessage response = await _client.PostAsync(
+            $"/api/users/impersonate/{targetProfileId}",
+            null
+        );
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
