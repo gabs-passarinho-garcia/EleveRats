@@ -91,6 +91,15 @@ resource "render_web_service" "api" {
     OTEL_SERVICE_NAME = {
       value = var.render_otel_service_name
     }
+    BITWARDEN_ACCESS_TOKEN = {
+      value = var.bitwarden_access_token
+    }
+    BITWARDEN_ORGANIZATION_ID = {
+      value = var.bitwarden_organization_id
+    }
+    BITWARDEN_PROJECT_ID = {
+      value = var.bitwarden_project_id
+    }
   }
   environment_id      = "evm-d72ns77fte5s73aear60"
   health_check_path   = "/health"

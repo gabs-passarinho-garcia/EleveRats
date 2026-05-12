@@ -34,6 +34,9 @@ jobs:
             TF_VAR_render_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
             TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
             TF_VAR_r2_custom_domain: ${{ secrets.R2_CUSTOM_DOMAIN }}
+            TF_VAR_bitwarden_access_token: ${{ secrets.BITWARDEN_ACCESS_TOKEN }}
+            TF_VAR_bitwarden_organization_id: ${{ secrets.BITWARDEN_ORGANIZATION_ID }}
+            TF_VAR_bitwarden_project_id: ${{ secrets.BITWARDEN_PROJECT_ID }}
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -87,6 +90,9 @@ jobs:
             TF_VAR_render_jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
             TF_VAR_r2_custom_domain: ${{ secrets.R2_CUSTOM_DOMAIN }}
             TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+            TF_VAR_bitwarden_access_token: ${{ secrets.BITWARDEN_ACCESS_TOKEN }}
+            TF_VAR_bitwarden_organization_id: ${{ secrets.BITWARDEN_ORGANIZATION_ID }}
+            TF_VAR_bitwarden_project_id: ${{ secrets.BITWARDEN_PROJECT_ID }}
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

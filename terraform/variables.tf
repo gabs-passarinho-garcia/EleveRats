@@ -121,3 +121,21 @@ variable "r2_custom_domain" {
   type        = string
   default     = "eleverats-assets.gabspassarinhogarcia.uk"
 }
+
+# --- Bitwarden Configuration ---
+
+variable "bitwarden_access_token" {
+  description = "Token de acesso ao Bitwarden Secrets Manager"
+  type        = string
+  sensitive   = true
+}
+
+variable "bitwarden_organization_id" {
+  description = "ID da organização no Bitwarden (GUID)"
+  type        = string
+}
+
+variable "bitwarden_project_id" {
+  description = "ID do projeto no Bitwarden (GUID)"
+  type        = string
+}
