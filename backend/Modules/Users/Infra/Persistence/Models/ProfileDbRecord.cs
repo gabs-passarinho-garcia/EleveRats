@@ -15,6 +15,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using EleveRats.Core.Infra.Persistence.Models;
 using EleveRats.Modules.Users.Domain.Enums;
 
@@ -45,4 +46,10 @@ internal sealed class ProfileDbRecord : AuditableDbRecord
     public OrganizationDbRecord? Organization { get; set; }
 
     public UserDbRecord? User { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of legal guardians for this profile.
+    /// Mapped as an EF Core Owned Entity collection in a separate table.
+    /// </summary>
+    public List<ResponsibleContactDbRecord> Responsibles { get; set; } = [];
 }

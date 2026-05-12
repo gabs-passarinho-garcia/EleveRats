@@ -15,10 +15,14 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EleveRats.Modules.Users.Application.Repositories;
 using EleveRats.Modules.Users.Domain.Entities;
+using EleveRats.Modules.Users.Domain.Enums;
+using EleveRats.Modules.Users.Domain.ValueObjects;
 using EleveRats.Modules.Users.Infra.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +41,7 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
     {
         ProfileDbRecord? record = await _dbContext
             .Profiles.AsNoTracking()
+            .Include(p => p.Responsibles)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         return record is null ? null : MapToDomain(record);
@@ -50,6 +55,7 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
     {
         ProfileDbRecord? record = await _dbContext
             .Profiles.AsNoTracking()
+            .Include(p => p.Responsibles)
             .FirstOrDefaultAsync(
                 u => u.UserId == userId && u.OrganizationId == organizationId,
                 cancellationToken
@@ -79,6 +85,15 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
     /// </summary>
     private static Profile MapToDomain(ProfileDbRecord record)
     {
+        IEnumerable<ResponsibleContact> responsibles = record.Responsibles.Select(r =>
+            ResponsibleContact.Reconstitute(
+                fullName: r.FullName,
+                kinship: r.Kinship,
+                phone: r.Phone,
+                documentId: r.DocumentId
+            )
+        );
+
         return Profile.Reconstitute(
             id: record.Id,
             organizationId: record.OrganizationId,
@@ -91,7 +106,8 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
             createdAt: record.CreatedAt,
             createdBy: record.CreatedBy,
             updatedAt: record.UpdatedAt,
-            updatedBy: record.UpdatedBy
+            updatedBy: record.UpdatedBy,
+            responsibles: responsibles
         );
     }
 
@@ -114,6 +130,16 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
             CreatedBy = profile.CreatedBy,
             UpdatedAt = profile.UpdatedAt,
             UpdatedBy = profile.UpdatedBy,
+            Responsibles =
+            [
+                .. profile.Responsibles.Select(r => new ResponsibleContactDbRecord
+                {
+                    FullName = r.FullName,
+                    Kinship = r.Kinship,
+                    Phone = r.Phone,
+                    DocumentId = r.DocumentId,
+                }),
+            ],
         };
     }
 }

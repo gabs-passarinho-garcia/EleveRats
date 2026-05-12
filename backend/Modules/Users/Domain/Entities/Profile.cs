@@ -15,7 +15,9 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using EleveRats.Modules.Users.Domain.Enums;
+using EleveRats.Modules.Users.Domain.ValueObjects;
 
 namespace EleveRats.Modules.Users.Domain.Entities;
 
@@ -27,6 +29,8 @@ internal class Profile
 {
     private const int _minimumCreationAge = 13;
     private const int _majorityAge = 18;
+
+    private readonly List<ResponsibleContact> _responsibles = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Profile"/> class.
@@ -44,7 +48,8 @@ internal class Profile
         DateTimeOffset createdAt,
         string createdBy,
         DateTimeOffset? updatedAt = null,
-        string? updatedBy = null
+        string? updatedBy = null,
+        IEnumerable<ResponsibleContact>? responsibles = null
     )
     {
         Id = id;
@@ -59,6 +64,11 @@ internal class Profile
         CreatedBy = createdBy;
         UpdatedAt = updatedAt;
         UpdatedBy = updatedBy;
+
+        if (responsibles is not null)
+        {
+            _responsibles.AddRange(responsibles);
+        }
     }
 
     /// <summary>
@@ -94,6 +104,12 @@ internal class Profile
     public DateTimeOffset? UpdatedAt { get; private set; }
 
     public string? UpdatedBy { get; private set; }
+
+    /// <summary>
+    /// Gets the read-only list of legal guardians registered for this profile.
+    /// Only populated for minor warriors (under 18 years old).
+    /// </summary>
+    public IReadOnlyList<ResponsibleContact> Responsibles => _responsibles.AsReadOnly();
 
     /// <summary>
     /// Factory method to CREATE a brand new Profile.
@@ -155,6 +171,7 @@ internal class Profile
     /// <param name="createdBy">The user who created the profile.</param>
     /// <param name="updatedAt">The date and time when the profile was last updated.</param>
     /// <param name="updatedBy">The user who last updated the profile.</param>
+    /// <param name="responsibles">Optional list of responsible contacts to reconstitute from persistence.</param>
     /// <returns>A new <see cref="Profile"/> instance.</returns>
     public static Profile Reconstitute(
         Guid id,
@@ -168,7 +185,8 @@ internal class Profile
         DateTimeOffset createdAt,
         string createdBy,
         DateTimeOffset? updatedAt,
-        string? updatedBy
+        string? updatedBy,
+        IEnumerable<ResponsibleContact>? responsibles = null
     )
     {
         return new Profile(
@@ -183,11 +201,54 @@ internal class Profile
             createdAt,
             createdBy,
             updatedAt,
-            updatedBy
+            updatedBy,
+            responsibles
         );
     }
 
     // --- Domain Behaviors ---
+
+    /// <summary>
+    /// Adds a legal guardian to this profile.
+    /// </summary>
+    /// <remarks>
+    /// If the warrior is a minor (under 18), at least one responsible must be registered.
+    /// Duplicate contacts (same name + kinship + phone) are silently ignored.
+    /// </remarks>
+    /// <param name="responsible">The responsible contact to add.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="responsible"/> is null.</exception>
+    public void AddResponsible(ResponsibleContact responsible)
+    {
+        ArgumentNullException.ThrowIfNull(responsible);
+
+        bool alreadyRegistered = _responsibles.Exists(r =>
+            string.Equals(r.FullName, responsible.FullName, StringComparison.OrdinalIgnoreCase)
+            && r.Kinship == responsible.Kinship
+            && string.Equals(r.Phone, responsible.Phone, StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (!alreadyRegistered)
+        {
+            _responsibles.Add(responsible);
+        }
+    }
+
+    /// <summary>
+    /// Validates that a minor profile has at least one responsible contact registered.
+    /// This should be called before finalizing the onboarding of a minor warrior.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the profile belongs to a minor but has no registered guardians.
+    /// </exception>
+    public void EnsureGuardianRequirementMet()
+    {
+        if (!IsAdult() && _responsibles.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "A minor warrior's profile requires at least one responsible contact to be registered."
+            );
+        }
+    }
 
     /// <summary>
     /// Checks if the profile belongs to an adult (legal age).

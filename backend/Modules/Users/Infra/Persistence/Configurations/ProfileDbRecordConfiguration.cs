@@ -62,6 +62,32 @@ internal sealed class ProfileDbRecordConfiguration : IEntityTypeConfiguration<Pr
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // --- Owned Entity: Responsible Contacts ---
+        // Each Profile can have multiple legal guardians stored in a dedicated table.
+        // EF Core manages the shadow FK (ProfileId) and a shadow PK automatically.
+        builder.OwnsMany(
+            x => x.Responsibles,
+            r =>
+            {
+                r.ToTable("ProfileResponsibles");
+
+                // Shadow primary key: auto-generated int, keeps the table lean.
+                r.Property<int>("Id").ValueGeneratedOnAdd();
+                r.HasKey("Id");
+
+                r.Property(x => x.FullName).IsRequired().HasMaxLength(255);
+
+                r.Property(x => x.Phone).IsRequired().HasMaxLength(20);
+
+                r.Property(x => x.DocumentId).HasMaxLength(18);
+
+                r.Property(x => x.Kinship).HasConversion<int>().IsRequired();
+
+                // Cascade delete: orphaned contacts die with their Profile.
+                r.WithOwner(x => x.Profile).HasForeignKey("ProfileId");
+            }
+        );
+
         // --- Global Query Filter ---
         // Excludes soft-deleted profiles
         builder.HasQueryFilter(x => x.DeletedAt == null);
