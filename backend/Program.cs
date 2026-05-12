@@ -20,6 +20,7 @@ using EleveRats.Core.Application.Contexts;
 using EleveRats.Core.Application.Interfaces;
 using EleveRats.Core.Application.Interfaces.Security;
 using EleveRats.Core.Infra.Caching;
+using EleveRats.Core.Infra.Configuration;
 using EleveRats.Core.Infra.Security;
 using EleveRats.Core.Infra.Web.Filters;
 using EleveRats.Core.Infra.Web.Middlewares;
@@ -37,6 +38,11 @@ using Scalar.AspNetCore;
 using StackExchange.Redis;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// --- Bitwarden Secrets Manager ---
+// Loads sensitive secrets (e.g., JwtSettings:SecretKey) from Bitwarden at startup.
+// Safe no-op if BITWARDEN_ACCESS_TOKEN is not present (dev/test environments).
+builder.Configuration.AddBitwardenSecrets();
 
 // --- 0. Infrastructure & Telemetry Parameters ---
 // OTLP Endpoint and Headers for Grafana Alloy (Logs, Traces, Metrics).
