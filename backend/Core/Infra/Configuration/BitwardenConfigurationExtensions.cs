@@ -14,6 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 
 namespace EleveRats.Core.Infra.Configuration;
@@ -65,36 +66,27 @@ public static class BitwardenConfigurationExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         string? accessToken = Environment.GetEnvironmentVariable(_accessTokenEnvVar);
-        string? rawOrganizationId = Environment.GetEnvironmentVariable(_organizationIdEnvVar);
-        string? rawProjectId = Environment.GetEnvironmentVariable(_projectIdEnvVar);
-
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            Console.WriteLine(
+            Debug.WriteLine(
                 $"[Bitwarden] {_accessTokenEnvVar} is not set. "
                     + "Bitwarden Secrets Manager will be skipped (safe for dev/test environments)."
             );
             return builder;
         }
 
-        if (
-            string.IsNullOrWhiteSpace(rawOrganizationId)
-            || !Guid.TryParse(rawOrganizationId, out Guid organizationId)
-        )
+        if (!TryGetGuidFromEnv(_organizationIdEnvVar, out Guid organizationId))
         {
-            Console.WriteLine(
+            Debug.WriteLine(
                 $"[Bitwarden] {_organizationIdEnvVar} is missing or invalid. "
                     + "Bitwarden Secrets Manager will be skipped."
             );
             return builder;
         }
 
-        if (
-            string.IsNullOrWhiteSpace(rawProjectId)
-            || !Guid.TryParse(rawProjectId, out Guid projectId)
-        )
+        if (!TryGetGuidFromEnv(_projectIdEnvVar, out Guid projectId))
         {
-            Console.WriteLine(
+            Debug.WriteLine(
                 $"[Bitwarden] {_projectIdEnvVar} is missing or invalid. "
                     + "Bitwarden Secrets Manager will be skipped."
             );
@@ -109,5 +101,17 @@ public static class BitwardenConfigurationExtensions
         };
 
         return builder.Add(new BitwardenConfigurationSource(options));
+    }
+
+    private static bool TryGetGuidFromEnv(string variableName, out Guid value)
+    {
+        string? rawValue = Environment.GetEnvironmentVariable(variableName);
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            value = Guid.Empty;
+            return false;
+        }
+
+        return Guid.TryParse(rawValue, out value);
     }
 }

@@ -14,6 +14,7 @@
 // along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
 // </copyright>
 
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 
 namespace EleveRats.Core.Infra.Configuration;
@@ -67,9 +68,8 @@ internal sealed class BitwardenConfigurationProvider : ConfigurationProvider
     /// The method performs the following steps:
     /// <list type="number">
     ///   <item>Authenticates via Machine Account Access Token.</item>
-    ///   <item>Lists all secret identifiers for the configured organization.</item>
+    ///   <item>Lists all secret identifiers for the configured project.</item>
     ///   <item>Fetches full secret values in a single batch call (<c>GetByIds</c>).</item>
-    ///   <item>Filters the results to only include secrets belonging to the configured project.</item>
     ///   <item>Translates Bitwarden key separators (<c>__</c>) to .NET separators (<c>:</c>).</item>
     /// </list>
     /// </remarks>
@@ -85,23 +85,19 @@ internal sealed class BitwardenConfigurationProvider : ConfigurationProvider
             {
                 _clientWrapper.Authenticate(_options.AccessToken);
 
-                var identifiers = _clientWrapper.ListSecrets(_options.OrganizationId).ToList();
+                var identifiers = _clientWrapper.ListSecrets(_options.ProjectId).ToList();
 
                 if (identifiers.Count == 0)
                 {
-                    Console.WriteLine(
-                        "[Bitwarden] No secrets found for the organization. Configuration will be empty."
+                    Debug.WriteLine(
+                        "[Bitwarden] No secrets found for the project. Configuration will be empty."
                     );
                     return;
                 }
 
-                Guid[] allIds = [.. identifiers.Select(static s => s.Id)];
+                Guid[] projectIds = [.. identifiers.Select(static s => s.Id)];
 
-                IEnumerable<BitwardenSecret> allSecrets = _clientWrapper.GetSecretsByIds(allIds);
-
-                IEnumerable<BitwardenSecret> projectSecrets = allSecrets.Where(s =>
-                    s.ProjectId == _options.ProjectId
-                );
+                IEnumerable<BitwardenSecret> projectSecrets = _clientWrapper.GetSecretsByIds(projectIds);
 
                 foreach (BitwardenSecret secret in projectSecrets)
                 {
@@ -111,10 +107,10 @@ internal sealed class BitwardenConfigurationProvider : ConfigurationProvider
                     Data[configKey] = secret.Value;
                 }
 
-                Console.WriteLine($"[Bitwarden] {Data.Count} secret(s) loaded successfully.");
+                Debug.WriteLine($"[Bitwarden] {Data.Count} secret(s) loaded successfully.");
             }
         }
-        catch (Exception ex) when (ex is not InvalidOperationException)
+        catch (Exception ex)
         {
             throw new InvalidOperationException(
                 $"Failed to load secrets from Bitwarden Secrets Manager. "

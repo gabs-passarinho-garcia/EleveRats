@@ -28,11 +28,11 @@ internal interface IBitwardenClientWrapper : IDisposable
     void Authenticate(string accessToken);
 
     /// <summary>
-    /// Lists all secret identifiers for the specified organization.
+    /// Lists all secret identifiers for the specified project.
     /// </summary>
-    /// <param name="organizationId">The organization GUID.</param>
+    /// <param name="projectId">The project GUID.</param>
     /// <returns>A collection of secret identifiers.</returns>
-    IEnumerable<BitwardenSecretIdentifier> ListSecrets(Guid organizationId);
+    IEnumerable<BitwardenSecretIdentifier> ListSecrets(Guid projectId);
 
     /// <summary>
     /// Fetches full secret data for the specified IDs in batch.

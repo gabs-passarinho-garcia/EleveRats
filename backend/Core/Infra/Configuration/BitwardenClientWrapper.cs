@@ -33,14 +33,14 @@ internal sealed class BitwardenClientWrapper : IBitwardenClientWrapper
     }
 
     /// <inheritdoc/>
-    public IEnumerable<BitwardenSecretIdentifier> ListSecrets(Guid organizationId)
+    public IEnumerable<BitwardenSecretIdentifier> ListSecrets(Guid projectId)
     {
         if (_client == null)
         {
             throw new InvalidOperationException("Client must be authenticated before use.");
         }
 
-        SecretIdentifiersResponse response = _client.Secrets.List(organizationId);
+        SecretIdentifiersResponse response = _client.Secrets.List(projectId);
         return response.Data.Select(static s => new BitwardenSecretIdentifier(s.Id, s.Key));
     }
 

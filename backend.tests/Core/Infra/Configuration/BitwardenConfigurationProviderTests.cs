@@ -46,47 +46,45 @@ public sealed class BitwardenConfigurationProviderTests
     }
 
     [Fact]
-    public void Load_WhenOrganizationHasNoSecrets_ShouldNotLoadAnyData()
+    public void Load_WhenProjectHasNoSecrets_ShouldNotLoadAnyData()
     {
         // Arrange
-        _wrapper.ListSecrets(_options.OrganizationId).Returns([]);
+        _wrapper.ListSecrets(_options.ProjectId).Returns([]);
 
         // Act
         _provider.Load();
 
         // Assert
         _wrapper.Received(1).Authenticate(_options.AccessToken);
-        _wrapper.Received(1).ListSecrets(_options.OrganizationId);
+        _wrapper.Received(1).ListSecrets(_options.ProjectId);
         _wrapper.DidNotReceive().GetSecretsByIds(Arg.Any<Guid[]>());
     }
 
     [Fact]
-    public void Load_WhenSecretsExist_ShouldFilterByProjectIdAndMapKeys()
+    public void Load_WhenSecretsExist_ShouldMapKeys()
     {
         // Arrange
         var secretId1 = Guid.NewGuid();
-        var secretId2 = Guid.NewGuid(); // Another project
+        var secretId2 = Guid.NewGuid();
 
         BitwardenSecretIdentifier id1 = new(secretId1, "Key1");
         BitwardenSecretIdentifier id2 = new(secretId2, "Key2");
 
         BitwardenSecret res1 = new(secretId1, "Service__Setting", "Value1", _options.ProjectId);
-        BitwardenSecret res2 = new(secretId2, "Other__Setting", "Value2", Guid.NewGuid()); // Different project
+        BitwardenSecret res2 = new(secretId2, "Other__Setting", "Value2", _options.ProjectId);
 
-        _wrapper.ListSecrets(_options.OrganizationId).Returns([id1, id2]);
+        _wrapper.ListSecrets(_options.ProjectId).Returns([id1, id2]);
         _wrapper.GetSecretsByIds(Arg.Any<Guid[]>()).Returns([res1, res2]);
 
         // Act
         _provider.Load();
 
         // Assert
-        _provider.TryGet("Service:Setting", out string? value).Should().BeTrue();
-        value.Should().Be("Value1");
+        _provider.TryGet("Service:Setting", out string? value1).Should().BeTrue();
+        value1.Should().Be("Value1");
 
-        _provider
-            .TryGet("Other:Setting", out _)
-            .Should()
-            .BeFalse("because it belongs to another project");
+        _provider.TryGet("Other:Setting", out string? value2).Should().BeTrue();
+        value2.Should().Be("Value2");
     }
 
     [Fact]
