@@ -112,6 +112,23 @@ internal sealed class ResponsibleContact
         );
     }
 
+    /// <summary>
+    /// Factory method to RECONSTITUTE an existing ResponsibleContact from persistence.
+    /// Bypasses domain validation rules to ensure that changes in validation logic
+    /// do not prevent loading existing, previously valid data.
+    /// </summary>
+    /// <param name="fullName">The full name stored in persistence.</param>
+    /// <param name="kinship">The kinship stored in persistence.</param>
+    /// <param name="phone">The phone stored in persistence.</param>
+    /// <param name="documentId">The optional document ID stored in persistence.</param>
+    /// <returns>A <see cref="ResponsibleContact"/> instance.</returns>
+    public static ResponsibleContact Reconstitute(
+        string fullName,
+        Kinship kinship,
+        string phone,
+        string? documentId
+    ) => new(fullName, kinship, phone, documentId);
+
     private static void ValidateFullName(string fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))

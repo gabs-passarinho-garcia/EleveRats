@@ -46,7 +46,7 @@ internal static class BrazilianDocumentValidator
     {
         return !string.IsNullOrWhiteSpace(phone)
             && phone.All(char.IsDigit)
-            && phone.Length is 10 or 11;
+            && (phone.Length == 10 || (phone.Length == 11 && phone[2] == '9'));
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ internal static class BrazilianDocumentValidator
         }
 
         // Reject trivially invalid sequences like "00000000000", "11111111111", etc.
-        if (cpf.Distinct().Count() == 1)
+        if (cpf.All(c => c == cpf[0]))
         {
             return false;
         }

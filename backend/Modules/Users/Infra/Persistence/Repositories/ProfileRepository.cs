@@ -86,7 +86,7 @@ internal sealed class ProfileRepository(UsersDbContext dbContext) : IProfileRepo
     private static Profile MapToDomain(ProfileDbRecord record)
     {
         IEnumerable<ResponsibleContact> responsibles = record.Responsibles.Select(r =>
-            ResponsibleContact.Create(
+            ResponsibleContact.Reconstitute(
                 fullName: r.FullName,
                 kinship: r.Kinship,
                 phone: r.Phone,

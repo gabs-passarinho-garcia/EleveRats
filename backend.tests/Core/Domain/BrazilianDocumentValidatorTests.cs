@@ -75,7 +75,9 @@ public class BrazilianDocumentValidatorTests
     [Theory]
     [InlineData("999998888")] // 9 digits — missing DDD
     [InlineData("119999988881")] // 12 digits — DDI accidentally included
-    public void IsValidPhone_WithWrongLength_ShouldReturnFalse(string phone) =>
+    [InlineData("11899998888")] // 11 digits — mobile but doesn't start with '9' at index 2
+    [InlineData("11000000000")] // 11 digits — clearly invalid
+    public void IsValidPhone_WithWrongFormatOrLength_ShouldReturnFalse(string phone) =>
         _ = BrazilianDocumentValidator.IsValidPhone(phone).Should().BeFalse();
 
     [Theory]
